@@ -1,0 +1,1044 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Bali 2027</title><meta name="theme-color" content="#0b0f12" media="(prefers-color-scheme: dark)"><meta name="theme-color" content="#efe9df"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Bali"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+(() => {
+const CFG = null; const BASE = "trips/cGl2p9kEOPclhXLuosuXEFb5/";
+if (!CFG || !window.firebase) { window.claude = { use: async () => null }; return; }
+firebase.initializeApp(CFG); const fs = firebase.firestore();
+try { fs.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
+const db = {
+  collection: c => { const ref = fs.collection(BASE + c); return { onSnapshot: (cb, err) => ref.onSnapshot(cb, err), add: d => ref.add(d) }; },
+  doc: p => { const ref = fs.doc(BASE + p); return { set: d => ref.set(d), update: d => ref.update(d), delete: () => ref.delete(), onSnapshot: (cb, err) => ref.onSnapshot(cb, err) }; },
+};
+window.claude = { use: async n => n === 'db' ? db : n === 'user' ? { can: async () => true } : null };
+fs.doc(BASE + 'meta/seed').get().then(async s => {
+  if (s.exists) return;
+  const seed = await fetch('seed.json').then(r => r.json()); const b = fs.batch();
+  for (const [col, rows] of Object.entries(seed)) for (const r of rows) { const { id, ...d } = r; b.set(fs.doc(BASE + col + '/' + id), d); }
+  b.set(fs.doc(BASE + 'meta/seed'), { at: Date.now() }); await b.commit();
+}).catch(e => console.warn('seed', e));
+})();
+</script>
+</head><body><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<style>
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,.4)}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800}.leaflet-overlay-pane svg{-moz-user-select:none}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-vml-shape{width:1px;height:1px}.lvml{behavior:url(#default#VML);display:inline-block;position:absolute}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity .2s linear;-moz-transition:opacity .2s linear;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);-moz-transition:-moz-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-control,.leaflet-popup-pane{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto}.leaflet-container{background:#ddd;outline-offset:1px}.leaflet-container a{color:#0078a8}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:.75rem;line-height:1.5}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.65);border-radius:4px}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block}.leaflet-bar a:focus,.leaflet-bar a:hover{background-color:#f4f4f4}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,.4);background:#fff;border-radius:5px}.leaflet-control-layers-toggle{background-image:url(images/layers.png);width:36px;height:36px}.leaflet-retina .leaflet-control-layers-toggle{background-image:url(images/layers-2x.png);background-size:26px 26px}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px}.leaflet-default-icon-path{background-image:url(images/marker-icon.png)}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,.8);margin:0}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4}.leaflet-control-attribution a{text-decoration:none}.leaflet-control-attribution a:focus,.leaflet-control-attribution a:hover{text-decoration:underline}.leaflet-attribution-flag{display:inline!important;vertical-align:baseline!important;width:1em;height:.6669em}.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,.8);text-shadow:1px 1px #fff}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers{box-shadow:none}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-layers{border:2px solid rgba(0,0,0,.2);background-clip:padding-box}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:0 0}.leaflet-container a.leaflet-popup-close-button:focus,.leaflet-container a.leaflet-popup-close-button:hover{color:#585858}.leaflet-popup-scrolled{overflow:auto}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto}.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999}.leaflet-div-icon{background:#fff;border:1px solid #666}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto}.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before,.leaflet-tooltip-top:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}.leaflet-tooltip-bottom{margin-top:6px}.leaflet-tooltip-top{margin-top:-6px}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff}.leaflet-tooltip-left{margin-left:-6px}.leaflet-tooltip-right{margin-left:6px}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+<style>
+/* One focal point per screen: the photo hero. One accent (sunset) used only for the thing that matters now. Everything else is quiet. */
+:root{
+  --bg:#efe9df; --bg-rgb:239,233,223;
+  --fg:#15191c; --on-fg:#f7f4ee;
+  --muted:rgba(21,25,28,.60); --muted2:rgba(21,25,28,.38); --faint:rgba(21,25,28,.09);
+  --surface:rgba(255,255,255,.66); --surface-2:rgba(255,255,255,.42);
+  --stroke:rgba(255,255,255,.55); --hilite:rgba(255,255,255,.8);
+  --ctl:rgba(21,25,28,.05); --ctl-stroke:rgba(21,25,28,.06); --press:rgba(21,25,28,.05);
+  --accent:oklch(63% .19 42); --accent-2:oklch(74% .16 70); --on-accent:#fff8f2;
+  --accent-soft:color-mix(in oklch,var(--accent) 13%,transparent);
+  --glow:0 0 0 1px color-mix(in oklch,var(--accent) 30%,transparent),0 8px 28px -6px color-mix(in oklch,var(--accent) 55%,transparent);
+  --danger:oklch(55% .18 25);
+  --hero-fg:#fff;
+  --shadow-sm:0 1px 2px rgba(21,25,28,.05),0 4px 12px -4px rgba(21,25,28,.08);
+  --shadow-md:0 1px 1px rgba(21,25,28,.03),0 10px 28px -10px rgba(21,25,28,.16);
+  --shadow-lg:0 2px 4px rgba(21,25,28,.06),0 18px 44px -10px rgba(21,25,28,.28);
+  --r-card:22px; --r-ctl:16px; --r-sheet:34px;
+  --ease-out:cubic-bezier(.22,1,.36,1); --ease-ios:cubic-bezier(.32,.72,0,1); --ease-std:cubic-bezier(.2,.8,.2,1);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --display:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Noto Sans TC",sans-serif;
+  --hero-h:clamp(440px,62svh,620px);
+  --card:#ffffff; --sea:#dfe7ea; --land:#f7f5f0; --coast:#b9c4c8; --road1:#cdc6b8; --road2:#d9d3c7; --road3:#e5e0d6; --label:rgba(22,28,28,.6); --marker-stroke:#ffffff;
+  --c1:#e0507a; --c2:#d9742b; --c3:#3d7fd1; --c4:#4fa23a; --c5:#0f7a71; --c6:#8e5bc4; --c7:#b8912a; --c8:#a0522d; --c9:#c2185b;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0f12; --bg-rgb:11,15,18; --fg:#eef1f3; --on-fg:#0b0f12;
+    --muted:rgba(238,241,243,.60); --muted2:rgba(238,241,243,.38); --faint:rgba(238,241,243,.09);
+    --surface:rgba(255,255,255,.07); --surface-2:rgba(255,255,255,.045);
+    --stroke:rgba(255,255,255,.09); --hilite:rgba(255,255,255,.14);
+    --ctl:rgba(255,255,255,.07); --ctl-stroke:rgba(255,255,255,.07); --press:rgba(255,255,255,.07);
+    --accent:oklch(76% .17 48); --accent-2:oklch(84% .14 78); --on-accent:#1a0d05;
+    --accent-soft:color-mix(in oklch,var(--accent) 16%,transparent);
+    --danger:oklch(72% .16 25);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.35),0 4px 12px -4px rgba(0,0,0,.4);
+    --shadow-md:0 1px 1px rgba(0,0,0,.3),0 12px 32px -10px rgba(0,0,0,.6);
+    --shadow-lg:0 2px 4px rgba(0,0,0,.4),0 22px 56px -10px rgba(0,0,0,.7);
+    --card:#161c20; --sea:#090d10; --land:#171f24; --coast:#2c3a3d; --road1:#39464a; --road2:#2f3b3e; --road3:#273235; --label:rgba(238,242,240,.6); --marker-stroke:#0b0f12;
+    --c1:#ff7a9e; --c2:#f29a5a; --c3:#7fb0f0; --c4:#8ad072; --c5:#72d6c6; --c6:#bb95ea; --c7:#e2bd5a; --c8:#e0946e; --c9:#f06292;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0f12; --bg-rgb:11,15,18; --fg:#eef1f3; --on-fg:#0b0f12;
+  --muted:rgba(238,241,243,.60); --muted2:rgba(238,241,243,.38); --faint:rgba(238,241,243,.09);
+  --surface:rgba(255,255,255,.07); --surface-2:rgba(255,255,255,.045);
+  --stroke:rgba(255,255,255,.09); --hilite:rgba(255,255,255,.14);
+  --ctl:rgba(255,255,255,.07); --ctl-stroke:rgba(255,255,255,.07); --press:rgba(255,255,255,.07);
+  --accent:oklch(76% .17 48); --accent-2:oklch(84% .14 78); --on-accent:#1a0d05;
+  --accent-soft:color-mix(in oklch,var(--accent) 16%,transparent);
+  --danger:oklch(72% .16 25);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35),0 4px 12px -4px rgba(0,0,0,.4);
+  --shadow-md:0 1px 1px rgba(0,0,0,.3),0 12px 32px -10px rgba(0,0,0,.6);
+  --shadow-lg:0 2px 4px rgba(0,0,0,.4),0 22px 56px -10px rgba(0,0,0,.7);
+  --card:#161c20; --sea:#090d10; --land:#171f24; --coast:#2c3a3d; --road1:#39464a; --road2:#2f3b3e; --road3:#273235; --label:rgba(238,242,240,.6); --marker-stroke:#0b0f12;
+  --c1:#ff7a9e; --c2:#f29a5a; --c3:#7fb0f0; --c4:#8ad072; --c5:#72d6c6; --c6:#bb95ea; --c7:#e2bd5a; --c8:#e0946e; --c9:#f06292;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:auto}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:17px;line-height:1.45;letter-spacing:-.022em;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:transparent}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+
+/* ---------- hero: the photo is the page ---------- */
+.hero{position:relative;height:var(--hero-h);margin-top:calc(-1 * env(safe-area-inset-top,0px));overflow:hidden;color:var(--hero-fg);background:#000}
+.hero-img{position:absolute;inset:-6% 0 0;background-size:cover;background-position:center 40%;opacity:0;transition:opacity 1.1s cubic-bezier(.4,0,.2,1);will-change:transform,opacity;transform:translateY(var(--py,0)) scale(1.06)}
+.hero-img[data-on="1"]{opacity:1}
+.hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,0) 28%,rgba(0,0,0,.06) 48%,rgba(0,0,0,.46) 76%,rgba(var(--bg-rgb),1) 100%)}
+.hero-in{position:absolute;inset:0;max-width:560px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-left,0px)) 26px max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;justify-content:space-between}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.brand{font-family:var(--display);font-weight:300;font-size:30px;letter-spacing:-.03em;line-height:1;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+.brand small{display:block;font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.12em;opacity:.82;margin-top:6px;text-transform:uppercase}
+.count{text-align:right;font-size:12px;font-weight:500;letter-spacing:.08em;opacity:.85;text-transform:uppercase}
+.count b{display:block;font-family:var(--display);font-weight:300;font-size:44px;letter-spacing:-.04em;line-height:.9;opacity:1;margin-top:4px;color:var(--accent-2);text-shadow:0 0 30px color-mix(in oklch,var(--accent) 60%,transparent)}
+.hero-text{transform:translateY(var(--ty,0));opacity:var(--to,1);will-change:transform,opacity}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;opacity:.88;display:flex;gap:10px;align-items:center}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--accent-2);border-radius:2px;box-shadow:0 0 12px var(--accent-2)}
+.hero-big{margin:10px 0 0;font-family:var(--display);font-weight:200;font-size:clamp(64px,19vw,96px);letter-spacing:-.05em;line-height:.9;text-shadow:0 4px 40px rgba(0,0,0,.4);text-wrap:balance}
+.hero-big.money{font-size:clamp(50px,15vw,76px);letter-spacing:-.04em}
+.hero-big.zh{font-family:var(--sans);font-weight:300;font-size:clamp(48px,14vw,72px);letter-spacing:-.03em;line-height:1.05}
+.hero-lead{margin:14px 0 0;font-size:16px;letter-spacing:-.01em;opacity:.9;max-width:34ch;text-shadow:0 1px 12px rgba(0,0,0,.4);line-height:1.4}
+.hero-lead b{font-weight:600;color:var(--accent-2)}
+
+/* compact bar that takes over once the hero scrolls away */
+.topbar{position:fixed;left:0;right:0;top:0;z-index:15;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));transform:translateY(-110%);transition:transform .45s var(--ease-ios),opacity .3s;opacity:0;pointer-events:none}
+.topbar[data-on="1"]{transform:none;opacity:1;pointer-events:auto}
+.topbar .in{max-width:560px;margin:0 auto;padding:10px 18px;border-radius:999px;display:flex;align-items:baseline;gap:12px;font-size:15px;font-weight:500}
+.topbar .in small{color:var(--muted);font-weight:400;font-size:13px}
+.topbar .in .num{font-weight:400;font-size:18px}
+
+/* glass: navigation only */
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.46));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--stroke);box-shadow:inset 0 1px 0 var(--hilite),var(--shadow-md)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .glass{background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.07))}}
+:root[data-theme="dark"] .glass{background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.07))}
+/* surface: content */
+.card,.flight,.kv,.empty{background:var(--surface);border:1px solid var(--stroke);box-shadow:inset 0 1px 0 var(--hilite),var(--shadow-md);border-radius:var(--r-card)}
+.kv.credits{background:none;border:0;box-shadow:none;padding:0 20px}
+
+/* ---------- column ---------- */
+.app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(124px + env(safe-area-inset-bottom,0px))}
+.view[hidden]{display:none}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack>*,.rise>*{animation:rise .5s var(--ease-out) both}
+.stack>*:nth-child(2),.rise>*:nth-child(2){animation-delay:50ms}.stack>*:nth-child(3),.rise>*:nth-child(3){animation-delay:100ms}.stack>*:nth-child(4),.rise>*:nth-child(4){animation-delay:150ms}.stack>*:nth-child(n+5),.rise>*:nth-child(n+5){animation-delay:200ms}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.section{margin:30px 20px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.section h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.section .n{font-family:var(--display);font-size:13px;color:var(--muted2);letter-spacing:.04em}
+
+/* ---------- chips ---------- */
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:14px 20px 14px;margin:0 -16px;scroll-snap-type:x proximity;-webkit-mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 28px),transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;scroll-snap-align:start;padding:9px 15px;border-radius:999px;font-size:15px;letter-spacing:-.012em;font-weight:500;color:var(--muted);background:var(--surface-2);border:1px solid var(--stroke);box-shadow:inset 0 1px 0 var(--hilite);transition:background .2s,color .2s,transform .15s var(--ease-std),box-shadow .25s}
+.chip:active{transform:scale(.95)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--on-fg);border-color:transparent;box-shadow:0 8px 20px -8px rgba(0,0,0,.45)}
+.chip.day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;line-height:1;min-width:52px;position:relative}
+.chip.day small{font-size:11px;letter-spacing:.04em;font-weight:500;color:var(--muted2)}
+.chip.day span{font-family:var(--display);font-size:21px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.chip.day i{position:absolute;bottom:-1px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent);opacity:0;transition:opacity .2s}
+.chip.day[data-today="1"] i{opacity:1}
+.chip.day[aria-pressed="true"]{background:linear-gradient(160deg,var(--accent),color-mix(in oklch,var(--accent) 70%,var(--accent-2)));color:var(--on-accent);box-shadow:var(--glow)}
+.chip.day[aria-pressed="true"] small{color:inherit;opacity:.75}
+.chip.day[aria-pressed="true"] i{background:var(--on-accent)}
+.chip .c{font-family:var(--display);font-size:12px;opacity:.55;margin-left:6px;font-weight:400}
+
+/* ---------- timeline ---------- */
+.tl{position:relative;padding:4px 0 0}
+.tl-item{display:grid;grid-template-columns:50px 20px 1fr;gap:0 10px;align-items:start;width:100%;text-align:left;min-width:0}
+.tl-item .time{font-family:var(--display);font-variant-numeric:tabular-nums;font-size:15px;font-weight:400;color:var(--muted);padding-top:21px;letter-spacing:0;text-align:right}
+.tl-item .rail{position:relative;align-self:stretch;display:flex;justify-content:center}
+.tl-item .rail::before{content:"";position:absolute;top:0;bottom:0;width:1px;background:var(--faint)}
+.tl-item:first-child .rail::before{top:26px}
+.tl-item:last-of-type .rail::before{bottom:calc(100% - 26px)}
+.tl-item .dot{position:relative;z-index:1;margin-top:22px;width:10px;height:10px;border-radius:50%;background:var(--bg);border:1.5px solid var(--muted2);transition:transform .3s var(--ease-out)}
+.tl-item[data-now="1"] .dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in oklch,var(--accent) 22%,transparent),0 0 18px var(--accent);animation:pulse 2.2s ease-in-out infinite}
+.tl-item[data-past="1"] .dot{background:var(--muted2);border-color:var(--muted2)}
+@keyframes pulse{50%{box-shadow:0 0 0 7px color-mix(in oklch,var(--accent) 10%,transparent),0 0 18px var(--accent)}}
+.tl-item .card{padding:14px 16px 15px;margin:4px 0 8px;min-width:0;transition:transform .2s var(--ease-std),background .15s}
+.tl-item:active .card{transform:scale(.985);background:var(--press)}
+.tl-item[data-now="1"] .card{box-shadow:inset 0 1px 0 var(--hilite),var(--glow)}
+.tl-item .title{font-size:17px;font-weight:500;line-height:1.35;overflow-wrap:anywhere}
+.tl-item .note{font-size:14px;letter-spacing:-.01em;color:var(--muted);margin-top:4px;overflow-wrap:anywhere;white-space:pre-line;line-height:1.45}
+.tl-item .tag{display:inline-block;margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:999px}
+
+/* ---------- ideas ---------- */
+.banner{position:relative;display:block;width:100%;border:0;padding:0;text-align:left;cursor:pointer;height:132px;border-radius:var(--r-card);overflow:hidden;margin:4px 0 6px;text-decoration:none;color:#fff;box-shadow:var(--shadow-lg);isolation:isolate;transition:transform .2s var(--ease-std)}
+.banner:active{transform:scale(.985)}
+.banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%;transform:scale(1.04)}
+.banner::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.6),rgba(0,0,0,.15) 70%,rgba(0,0,0,0))}
+.banner .in{position:absolute;inset:0;z-index:1;padding:18px 20px;display:flex;flex-direction:column;justify-content:flex-end}
+.banner .t{font-family:var(--display);font-size:26px;font-weight:300;letter-spacing:-.02em;line-height:1}
+.banner .s{font-size:13px;opacity:.85;margin-top:6px;letter-spacing:-.006em}
+.banner .arrow{position:absolute;top:14px;right:16px;z-index:1;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-family:var(--display);font-size:18px;font-weight:300}
+
+.rail-go{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 20px 6px;margin:0 -16px;scroll-snap-type:x mandatory}
+.rail-go::-webkit-scrollbar{display:none}
+.go-card{flex:0 0 136px;height:176px;border-radius:18px;overflow:hidden;position:relative;scroll-snap-align:start;color:#fff;text-align:left;box-shadow:var(--shadow-md);background:linear-gradient(160deg,color-mix(in oklch,var(--accent) 80%,#000),color-mix(in oklch,var(--accent-2) 70%,#000));isolation:isolate;transition:transform .2s var(--ease-std)}
+.go-card:active{transform:scale(.97)}
+.go-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.go-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.72))}
+.go-card .in{position:absolute;inset:auto 0 0;z-index:1;padding:12px}
+.go-card .t{font-size:14px;font-weight:600;line-height:1.3;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.go-card .a{font-size:11px;opacity:.8;margin-top:3px;letter-spacing:.02em}
+.go-card .chk{position:absolute;top:10px;right:10px;z-index:1;width:22px;height:22px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 0 14px var(--accent)}
+.go-card .chk svg{width:12px;height:12px;stroke:var(--on-accent);stroke-width:2.6;fill:none}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:14px;align-items:center;width:100%;padding:10px 12px 10px 10px;min-width:0;transition:transform .2s var(--ease-std),background .15s}
+.row:active{transform:scale(.985)}
+.row[data-go="1"]{box-shadow:inset 0 1px 0 var(--hilite),inset 3px 0 0 var(--accent),var(--shadow-md)}
+.thumb{flex:0 0 58px;width:58px;height:58px;border-radius:14px;overflow:hidden;background:var(--ctl);display:grid;place-items:center;font-family:var(--display);font-size:22px;font-weight:300;color:var(--muted2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.row .body{flex:1;min-width:0;text-align:left;padding:2px 0}
+.row .title{font-size:16px;font-weight:500;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row .area{font-size:13px;letter-spacing:-.006em;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .price{font-family:var(--display);font-size:12px;color:var(--accent);margin-top:4px;letter-spacing:.01em}
+.row .mark{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--muted2);display:grid;place-items:center;transition:background .2s,border-color .2s,transform .2s var(--ease-std),box-shadow .3s}
+.row .mark:active{transform:scale(.88)}
+.row .mark[data-on="1"]{background:var(--accent);border-color:var(--accent);box-shadow:0 0 16px color-mix(in oklch,var(--accent) 60%,transparent)}
+.row .mark svg{width:14px;height:14px;stroke:var(--on-accent);stroke-width:2.6;fill:none;stroke-dasharray:20;stroke-dashoffset:20;opacity:0;transition:stroke-dashoffset .35s var(--ease-out) .05s,opacity .1s}
+.row .mark[data-on="1"] svg{stroke-dashoffset:0;opacity:1}
+.row .lnk{flex:0 0 auto;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--accent);padding:7px 11px;border-radius:999px;background:var(--accent-soft);text-decoration:none}
+.add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:var(--r-card);border:1px dashed var(--muted2);color:var(--muted);font-size:15px;letter-spacing:-.012em;background:transparent;transition:background .15s;margin-top:4px}
+.add:active{background:var(--press)}
+.empty{padding:26px 22px;font-size:15px;letter-spacing:-.012em;color:var(--muted);line-height:1.6}
+.empty b{color:var(--fg);font-weight:400;display:block;font-family:var(--display);font-size:22px;letter-spacing:-.02em;margin-bottom:6px}
+
+/* ---------- info ---------- */
+.flight{padding:18px 20px 16px;position:relative;overflow:hidden}
+.flight::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--accent),var(--accent-2))}
+.flight .code{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.flight .code b{font-family:var(--display);font-weight:500;color:var(--accent);letter-spacing:.08em;font-size:13px}
+.flight .legs{display:flex;align-items:center;gap:14px;margin:14px 0 4px;font-variant-numeric:tabular-nums}
+.flight .leg{flex:0 0 auto}
+.flight .leg .city{font-family:var(--display);font-size:46px;font-weight:200;letter-spacing:-.03em;line-height:1}
+.flight .leg .time{font-family:var(--display);font-size:19px;margin-top:4px;font-weight:400;color:var(--muted)}
+.flight .leg.to{text-align:right}
+.flight .line{flex:1;height:1px;background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 9px);color:var(--muted2);position:relative}
+.flight .line::before{content:"";position:absolute;left:0;top:-3px;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--fg);background:var(--bg)}
+.flight .line::after{content:"";position:absolute;right:0;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.flight .meta{font-size:13px;letter-spacing:-.006em;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px dashed var(--faint)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:0 16px;padding:4px 20px}
+.kv div{padding:13px 0;border-bottom:1px solid var(--faint);font-size:15px;letter-spacing:-.012em;min-width:0}
+.kv div:nth-last-child(-n+2){border-bottom:0}
+.kv .k{color:var(--muted)}
+.kv .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.credits .k,.credits .v{font-size:12px;font-weight:400;padding:9px 0}
+.credits .v{color:var(--muted2)}
+.copy{font-size:12px;font-weight:600;color:var(--accent);padding:5px 10px;border-radius:999px;background:var(--accent-soft)}
+.note-card{padding:14px 16px}
+.note-card .title{font-size:16px;font-weight:500}
+.note-card .note{font-size:14px;color:var(--muted);margin-top:4px;white-space:pre-line;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.note-card[data-open="1"] .note{-webkit-line-clamp:unset}
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.notes-grid .note-card{text-align:left;width:100%}
+.notes-grid .note-card.wide{grid-column:1/-1}
+
+/* ---------- map view: the map is the hero ---------- */
+.mapwrap{position:relative;margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));margin-top:calc(-1 * env(safe-area-inset-top,0px));height:clamp(380px,58svh,600px);background:var(--sea);border-radius:0 0 28px 28px;overflow:hidden;box-shadow:var(--shadow-lg);isolation:isolate}
+#map{position:absolute;inset:0;background:var(--sea);font-family:var(--sans)}
+.map-brand{position:absolute;z-index:500;top:calc(14px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));padding:8px 14px 8px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.06em;pointer-events:none;display:flex;gap:8px;align-items:baseline;color:var(--fg)}
+.map-brand b{font-family:var(--display);font-weight:300;font-size:20px;letter-spacing:-.03em}
+.leaflet-container{background:var(--sea)}
+.leaflet-control-zoom{border:0!important;box-shadow:none!important;margin:14px!important}
+.leaflet-control-zoom a{background:var(--surface)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:var(--fg)!important;border:1px solid var(--stroke)!important;border-radius:12px!important;width:36px!important;height:36px!important;line-height:34px!important;font-weight:300;font-size:22px!important;margin-bottom:6px}
+.leaflet-control-zoom-in{border-radius:12px!important}
+.leaflet-control-attribution{background:transparent!important;color:var(--muted2)!important;font-size:10px!important;padding:2px 8px!important;font-family:var(--sans)}
+.leaflet-control-attribution a{color:var(--muted2)!important}
+.town{font-family:var(--display);font-weight:400;font-size:10.5px;letter-spacing:.08em;color:var(--label);white-space:nowrap;text-transform:uppercase;pointer-events:none;text-shadow:0 0 6px var(--land),0 0 2px var(--land)}
+.town.big{font-size:12px;font-weight:500}
+.leaflet-popup-content-wrapper{background:var(--card);color:var(--fg);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);border:1px solid var(--stroke);padding:0;overflow:hidden}
+.leaflet-popup-content{margin:0;width:240px!important;line-height:1.45;font-family:var(--sans);letter-spacing:-.01em}
+.leaflet-popup-tip{background:var(--card)}
+.leaflet-popup-close-button{color:var(--fg)!important;background:var(--surface)!important;border-radius:999px;width:26px!important;height:26px!important;line-height:24px!important;top:8px!important;right:8px!important;font-size:18px!important;font-weight:300}
+.pp img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;max-width:100%}
+.pp .b{padding:10px 12px 12px}
+.pp h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.pp .m{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.pp .m i{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.pp .w{margin:6px 0 0;font-size:12.5px;line-height:1.45}
+.pp .l{display:flex;gap:12px;margin:8px 0 0;font-size:12.5px}
+.pp .l a{color:var(--accent);text-decoration:none;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:14px 4px 0;color:var(--muted);font-size:12px}
+.legend span i{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.mrule{margin:8px 4px 0;font-size:12px;color:var(--muted2);line-height:1.6}
+.mbar{position:sticky;top:calc(8px + env(safe-area-inset-top,0px));z-index:5;margin:14px 0 0;padding:10px 12px 8px;border-radius:24px}
+.msearch input{width:100%;border:0;outline:0;font:inherit;font-size:15px;padding:10px 14px;border-radius:14px;background:var(--ctl);color:var(--fg);-webkit-appearance:none;appearance:none}
+.msearch input::placeholder{color:var(--muted2)}
+.msearch input:focus-visible{box-shadow:0 0 0 2px color-mix(in oklch,var(--accent) 60%,transparent)}
+.mrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0 0}
+.mrow::-webkit-scrollbar{display:none}
+.mchip{flex:0 0 auto;font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:999px;background:var(--ctl);color:var(--fg);white-space:nowrap;font-variant-numeric:tabular-nums;transition:background .15s,color .15s;display:inline-flex;align-items:center;gap:6px;border:1px solid transparent}
+.mchip b{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dot,transparent);flex:0 0 auto}
+.mchip i{font-style:normal;font-family:var(--display);font-weight:400;color:var(--muted);font-size:12px}
+.mchip[aria-pressed="true"]{background:var(--fg);color:var(--on-fg)}
+.mchip[aria-pressed="true"] i{color:inherit;opacity:.65}
+.mchip.rain[aria-pressed="true"]{background:linear-gradient(160deg,var(--accent),color-mix(in oklch,var(--accent) 70%,var(--accent-2)));color:var(--on-accent);box-shadow:var(--glow)}
+.mrow.area .mchip{font-size:12.5px;padding:6px 10px;font-weight:400}
+.mcount{margin:16px 4px 0;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.group{margin:28px 4px 0;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.group b{display:inline-block;width:9px;height:9px;border-radius:50%;box-shadow:0 0 10px currentColor}
+.group i{font-style:normal;font-family:var(--display);font-weight:400;letter-spacing:.04em;color:var(--muted2)}
+.place{margin:12px 0 0;overflow:hidden;scroll-margin-top:170px}
+.place.on{box-shadow:inset 0 1px 0 var(--hilite),var(--glow)}
+.place img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;max-width:100%;background:var(--ctl)}
+.pbody{padding:14px 18px 16px}
+.ptop{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.ptop h2{margin:0;font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.25;min-width:0}
+.ptop h2 a{color:inherit;text-decoration:none}
+.ptop h2 a::after{content:" ↗";color:var(--accent);font-weight:300}
+.pr{flex:0 0 auto;font-family:var(--display);font-weight:300;font-size:16px;color:var(--muted);letter-spacing:.08em;padding-top:2px}
+.pmeta{margin:5px 0 0;color:var(--muted);font-size:13px}
+.why{margin:10px 0 0;font-size:14.5px;line-height:1.55}
+.src{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--faint);font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.src a,.src button{color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;background:none;border:0;font:inherit;font-size:13px;cursor:pointer;padding:0}
+.mfoot{margin:36px 4px 0;color:var(--muted2);font-size:12px;line-height:1.7}
+
+/* ---------- 記帳 ---------- */
+.conv{padding:16px 18px 14px}
+.conv .pair{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.conv .cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+.conv .cell small{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--muted2);text-transform:uppercase}
+.conv input{width:100%;min-width:0;border:0;outline:0;font:inherit;font-family:var(--display);font-size:26px;font-weight:300;letter-spacing:-.02em;padding:8px 12px;border-radius:14px;background:var(--ctl);color:var(--fg);font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none}
+.conv input:focus-visible{box-shadow:0 0 0 2px color-mix(in oklch,var(--accent) 60%,transparent)}
+.conv .swap{font-family:var(--display);font-size:22px;font-weight:200;color:var(--accent);padding-top:18px}
+.conv .quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px -18px 0;padding:0 18px}
+.conv .quick::-webkit-scrollbar{display:none}
+.conv .quick button{flex:0 0 auto;font-size:13px;font-weight:500;padding:6px 11px;border-radius:999px;background:var(--ctl);color:var(--muted);font-variant-numeric:tabular-nums}
+.conv .rate{margin:12px 0 0;font-size:12px;color:var(--muted2);display:flex;justify-content:space-between;align-items:center}
+.conv .rate button{color:var(--accent);font-weight:600;font-size:12px}
+.settle{padding:16px 18px 14px}
+.settle .people{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.settle .pp2{text-align:center;padding:10px 4px;border-radius:14px;background:var(--ctl);min-width:0}
+.settle .pp2 .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.settle .pp2 .net{font-family:var(--display);font-size:17px;font-weight:400;margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.settle .pp2 .net.pos{color:var(--accent)}
+.settle .pp2 .net.neg{color:var(--muted)}
+.settle .pp2 .paid{font-size:11px;color:var(--muted2);margin-top:2px;font-variant-numeric:tabular-nums}
+.settle .tx{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--faint);display:flex;flex-direction:column;gap:8px}
+.settle .tx div{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+.settle .tx b{font-weight:600}
+.settle .tx .amt{font-family:var(--display);font-variant-numeric:tabular-nums;color:var(--accent);font-weight:500}
+.settle .done{font-size:14px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--faint)}
+.dayhead{margin:26px 4px 8px;display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.dayhead .num{font-weight:400;letter-spacing:.02em;color:var(--muted2);text-transform:none}
+.exp{display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px 12px 12px;text-align:left;min-width:0;transition:transform .2s var(--ease-std)}
+.exp:active{transform:scale(.985)}
+.exp .ico{flex:0 0 44px;width:44px;height:44px;border-radius:13px;background:var(--ctl);display:grid;place-items:center;font-size:22px}
+.exp .body{flex:1;min-width:0}
+.exp .title{display:block;font-size:16px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp .sub{display:block;font-size:13px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp .amt{flex:0 0 auto;text-align:right}
+.exp .amt .a{font-family:var(--display);font-size:17px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.exp .amt .b{font-size:12px;color:var(--muted2);font-variant-numeric:tabular-nums;margin-top:1px}
+.f label.lbl{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin:6px 0 -4px}
+.f .seg.cur button{font-family:var(--display);letter-spacing:.04em}
+.f .splits{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.f .splits label{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.f .splits input{padding:10px 12px;font-size:15px}
+.f .hint{font-size:12px;color:var(--muted2);margin:-2px 0 0}
+
+/* ---------- tab bar ---------- */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:0 max(16px,env(safe-area-inset-left,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));pointer-events:none}
+.tabs::before{content:"";position:absolute;left:0;right:0;bottom:0;height:150px;pointer-events:none;background:linear-gradient(to top,rgba(var(--bg-rgb),.9),rgba(var(--bg-rgb),0));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(to top,#000 30%,transparent);mask-image:linear-gradient(to top,#000 30%,transparent)}
+.tabs .bar{pointer-events:auto;max-width:400px;margin:0 auto;border-radius:999px;display:flex;padding:5px;position:relative;box-shadow:inset 0 1px 0 var(--hilite),var(--shadow-lg)}
+.tabs button{flex:1;padding:12px 0;border-radius:999px;font-size:14px;letter-spacing:-.01em;font-weight:500;color:var(--muted);position:relative;z-index:1;transition:color .25s,transform .15s var(--ease-std)}
+.tabs button:active{transform:scale(.94)}
+.tabs button[aria-selected="true"]{color:var(--on-accent)}
+.tabs .ind{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/5);border-radius:999px;background:linear-gradient(160deg,var(--accent),color-mix(in oklch,var(--accent) 70%,var(--accent-2)));box-shadow:var(--glow);transition:transform .45s var(--ease-ios)}
+
+/* ---------- sheet ---------- */
+.dim{position:fixed;inset:0;z-index:30;background:rgba(6,9,11,.4);opacity:0;pointer-events:none;transition:opacity .3s ease-out}
+.dim[data-open="1"]{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:560px;margin:0 auto;border-radius:var(--r-sheet) var(--r-sheet) 0 0;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(30px) saturate(140%);backdrop-filter:blur(30px) saturate(140%);border:1px solid rgba(255,255,255,.5);border-bottom:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.75),var(--shadow-lg);padding:16px max(20px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-right,0px));transform:translateY(105%);transition:transform .5s var(--ease-ios)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sheet{background:rgba(22,27,31,.9);border-color:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),var(--shadow-lg)}}
+:root[data-theme="dark"] .sheet{background:rgba(22,27,31,.9);border-color:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),var(--shadow-lg)}
+.sheet[data-open="1"]{transform:none}
+.sheet .grab{width:36px;height:5px;border-radius:3px;background:var(--muted2);margin:0 auto 20px;opacity:.5}
+.sheet h2{margin:0 0 20px;font-family:var(--display);font-size:24px;font-weight:300;letter-spacing:-.02em}
+.f{display:flex;flex-direction:column;gap:10px}
+.f input,.f select,.f textarea{width:100%;padding:14px 16px;border-radius:var(--r-ctl);border:1px solid var(--ctl-stroke);background:var(--ctl);font-size:17px;-webkit-appearance:none;appearance:none}
+.f input::placeholder,.f textarea::placeholder{color:var(--muted2)}
+.f input:focus-visible,.f select:focus-visible,.f textarea:focus-visible{outline:0;box-shadow:0 0 0 2px color-mix(in oklch,var(--accent) 60%,transparent)}
+.f textarea{min-height:84px;resize:vertical}
+.f .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f .seg{display:flex;gap:6px;flex-wrap:wrap}
+.f .seg button{padding:9px 14px;border-radius:999px;font-size:15px;color:var(--muted);background:var(--ctl);border:1px solid var(--ctl-stroke);transition:background .2s,color .2s,transform .15s var(--ease-std)}
+.f .seg button:active{transform:scale(.95)}
+.f .seg button[aria-pressed="true"]{background:var(--fg);color:var(--on-fg);border-color:transparent}
+.actions{display:flex;gap:10px;margin-top:24px;align-items:center}
+.btn{flex:1;padding:14px 20px;line-height:1.3;border-radius:999px;font-size:17px;font-weight:600;background:linear-gradient(160deg,var(--accent),color-mix(in oklch,var(--accent) 70%,var(--accent-2)));color:var(--on-accent);box-shadow:var(--glow);transition:transform .15s var(--ease-std)}
+.btn:active{transform:scale(.98)}
+.btn.ghost{flex:0 0 auto;background:transparent;color:var(--muted);padding:14px;box-shadow:none;font-weight:500}
+.btn.danger{color:var(--danger)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px) scale(.96);z-index:40;padding:10px 16px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .25s,transform .4s var(--ease-out);pointer-events:none}
+.toast[data-on="1"]{opacity:1;transform:translate(-50%,0) scale(1)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important}.hero-img{transform:none!important}}
+@media (prefers-reduced-transparency:reduce){.glass,.sheet,.tabs .bar,.topbar .in{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(var(--bg-rgb),.97)}}
+</style>
+
+<div class="hero" id="hero">
+  <div class="hero-img" id="photoA" aria-hidden="true"></div>
+  <div class="hero-img" id="photoB" aria-hidden="true"></div>
+  <div class="hero-fade" aria-hidden="true"></div>
+  <div class="hero-in">
+    <div class="hero-top">
+      <div class="brand">Bali<small>1.5 → 1.11 · 2027</small></div>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="hero-text" id="hero-text"></div>
+  </div>
+</div>
+<div class="topbar" id="topbar"><div class="in glass" id="topbar-in"></div></div>
+
+<div class="app">
+  <section class="view" id="view-plan">
+    <div class="chips" id="days" role="tablist"></div>
+    <div class="tl" id="plan-list"></div>
+  </section>
+
+  <section class="view" id="view-ideas" hidden>
+    <div class="rise">
+    <button class="banner" type="button" id="to-map">
+      <img src="img/tegalalang.jpg" alt="">
+      <span class="arrow">→</span>
+      <span class="in"><span class="t">口袋地圖</span><span class="s">179 個地點 · 餐廳、酒吧、景點、抱石場、伴手禮 · 照片與地圖</span></span>
+    </button>
+    </div>
+    <div id="go-wrap"></div>
+    <div class="chips" id="cats"></div>
+    <div class="list" id="ideas-list"></div>
+  </section>
+
+  <section class="view" id="view-map" hidden>
+    <div class="mapwrap"><div id="map" aria-label="峇里島地圖，可縮放"></div><div class="map-brand glass"><b>口袋地圖</b><span>179 個地點</span></div></div>
+    <div class="legend" id="legend"></div>
+    <p class="mrule">點地圖上的點看照片，卡片上的「地圖」會飛過去。價位：$ 一人 IDR 100k 內、$$ 100k 到 400k、$$$ 400k 以上；餐廳只留人均 IDR 260k（約 TWD 500）內。☔ 是室內或有遮蔽的地方。</p>
+    <div class="mbar glass">
+      <div class="msearch"><input id="mq" type="search" placeholder="搜尋店名、區域、關鍵字" autocomplete="off"></div>
+      <div class="mrow cat" id="mcats"></div>
+      <div class="mrow area" id="mareas"></div>
+    </div>
+    <p class="mcount" id="mcount"></p>
+    <div id="mlist"></div>
+    <p class="mfoot">來源都是 2024 到 2026 年的文章，座標用 Google Maps 核對過；照片取自各店在 Google Maps 上的首圖，店家會搬會關，出發前再看一眼營業狀態。底圖海岸線與主要道路來自 OpenStreetMap（ODbL）。</p>
+  </section>
+
+  <section class="view" id="view-cost" hidden>
+    <div class="section"><h2>換算</h2><span class="n" id="fx-label"></span></div>
+    <div class="conv card">
+      <div class="pair">
+        <div class="cell"><small>IDR 印尼盾</small><input id="cv-idr" type="text" inputmode="decimal" placeholder="100,000"></div>
+        <div class="swap">⇄</div>
+        <div class="cell"><small>TWD 台幣</small><input id="cv-twd" type="text" inputmode="decimal" placeholder="200"></div>
+      </div>
+      <div class="quick" id="cv-quick"></div>
+      <div class="rate"><span id="cv-rate"></span><button type="button" id="fx-edit">改匯率</button></div>
+    </div>
+    <div class="section"><h2>結算</h2><span class="n">以台幣計</span></div>
+    <div id="settle"></div>
+    <div id="exp-list"></div>
+  </section>
+
+  <section class="view" id="view-info" hidden>
+    <div class="section"><h2>航班</h2><span class="n">STARLUX · JX</span></div>
+    <div class="stack">
+      <div class="flight">
+        <div class="code"><span><b>JX765</b> · 去程</span><span>1 月 5 日 週二</span></div>
+        <div class="legs">
+          <div class="leg"><div class="city">TPE</div><div class="time">10:10</div></div>
+          <div class="line"></div>
+          <div class="leg to"><div class="city">DPS</div><div class="time">15:40</div></div>
+        </div>
+        <div class="meta">桃園第二航廈 → 峇里島國際航廈 · 5 小時 30 分 · 同時區</div>
+      </div>
+      <div class="flight">
+        <div class="code"><span><b>JX766</b> · 回程</span><span>1 月 11 日 週一</span></div>
+        <div class="legs">
+          <div class="leg"><div class="city">DPS</div><div class="time">16:40</div></div>
+          <div class="line"></div>
+          <div class="leg to"><div class="city">TPE</div><div class="time">22:05</div></div>
+        </div>
+        <div class="meta">峇里島國際航廈 → 桃園第二航廈 · 5 小時 25 分</div>
+      </div>
+      <div class="kv">
+        <div class="k">訂位代號</div><div class="v"><span id="pnr" class="num">DCSCCS</span><button class="copy" data-copy="DCSCCS">複製</button></div>
+        <div class="k">票號</div><div class="v num">189 2106936285</div>
+        <div class="k">行李</div><div class="v">託運 1 件 · 手提 7 kg</div>
+        <div class="k">票價</div><div class="v num">TWD 13,288</div>
+      </div>
+    </div>
+    <div class="section"><h2>備忘</h2><span class="n" id="notes-n"></span></div>
+    <div id="notes-list"></div>
+    <div class="section"><h2>照片來源</h2></div>
+    <div class="kv credits">
+      <div class="k">Kuta 夕陽</div><div class="v">Jakubhal · CC BY-SA 4.0</div>
+      <div class="k">Tanah Lot</div><div class="v">Chainwit. · CC BY 4.0</div>
+      <div class="k">Tegalalang</div><div class="v">Snowmanstudios · CC BY-SA 4.0</div>
+      <div class="k">Batur 日出</div><div class="v">Aaron Rentfrew · CC BY-SA 4.0</div>
+      <div class="k">Uluwatu</div><div class="v">Cccefalon · CC BY-SA 3.0</div>
+      <div class="k">Kelingking</div><div class="v">Chainwit. · CC BY 4.0</div>
+      <div class="k">Tirta Empul</div><div class="v">Chainwit. · CC BY 4.0</div>
+      <div class="k">Campuhan</div><div class="v">Jakubhal · CC BY-SA 4.0</div>
+      <div class="k">地點縮圖</div><div class="v">Google Maps 使用者上傳，僅供私人行程</div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs"><div class="bar glass" role="tablist">
+  <div class="ind" id="ind"></div>
+  <button role="tab" data-tab="plan" aria-selected="true">行程</button>
+  <button role="tab" data-tab="ideas" aria-selected="false">名單</button>
+  <button role="tab" data-tab="map" aria-selected="false">地圖</button>
+  <button role="tab" data-tab="cost" aria-selected="false">記帳</button>
+  <button role="tab" data-tab="info" aria-selected="false">資訊</button>
+</div></nav>
+
+<div class="dim" id="dim"></div>
+<form class="sheet" id="sheet" autocomplete="off">
+  <div class="grab"></div>
+  <h2 id="sheet-title">新增</h2>
+  <div class="f" id="fields"></div>
+  <div class="actions">
+    <button type="button" class="btn ghost danger" id="del" hidden>刪除</button>
+    <button type="button" class="btn ghost" id="cancel">取消</button>
+    <button type="submit" class="btn" id="save">儲存</button>
+  </div>
+</form>
+<div class="toast glass" id="toast"></div>
+
+<script>
+(() => {
+const $ = (s, el = document) => el.querySelector(s);
+const DAYS = [
+  { m: 1, d: 5, w: '二', place: 'Kuta', sub: '抵達' }, { m: 1, d: 6, w: '三', place: 'Ubud', sub: 'Kuta → Ubud' },
+  { m: 1, d: 7, w: '四', place: 'Ubud', sub: '梯田與聖泉' }, { m: 1, d: 8, w: '五', place: 'Ubud', sub: '火山與河' },
+  { m: 1, d: 9, w: '六', place: 'Uluwatu', sub: 'Ubud → Uluwatu' }, { m: 1, d: 10, w: '日', place: 'Nusa Penida', sub: '離島一日' },
+  { m: 1, d: 11, w: '一', place: 'Uluwatu', sub: '回家' },
+];
+const CATS = { outdoor: '戶外', sight: '景點', food: '吃喝', shop: '伴手禮', stay: '住宿' };
+const MEMBERS = ['Matt', 'Charlie', '宗任', '蔡昀佑'];
+const ECATS = { food: ['🍜', '吃喝'], transport: ['🚗', '交通'], stay: ['🏡', '住宿'], play: ['🏄', '玩樂'], shop: ['🛍️', '購物'], other: ['💸', '其他'] };
+const fmtN = n => Math.round(n).toLocaleString('en-US');
+const fmtAmt = (n, cur) => cur === 'IDR' ? 'Rp ' + fmtN(n) : 'NT$ ' + fmtN(n);
+const toTWD = (n, cur) => cur === 'IDR' ? n / S.fx : n;
+const GLYPH = { outdoor: '山', sight: '寺', food: '食', shop: '禮', stay: '宿' };
+const LINK_LABEL = { stay: '訂房', shop: '哪裡買', food: '地圖', sight: '地圖', outdoor: '地圖' };
+const THUMBS = new Set(["i02","i03","i04","i05","i06","i09","i11","i12","i13","i14","i16","i23","s01","s02","s05","s06","s07","s08","s09","s10","s11","s12","s13","s15","s16","s19","s21","s23","s24"]);
+const PHOTOS = {
+  day: ['img/kuta.jpg', 'img/tanahlot.jpg', 'img/tegalalang.jpg', 'img/batur.jpg', 'img/uluwatu.jpg', 'img/kelingking.jpg', 'img/campuhan.jpg'],
+  ideas: 'img/tirtaempul.jpg', info: 'img/kuta.jpg', cost: 'img/campuhan.jpg',
+};
+let photoCur = null, photoFlip = false;
+function setPhoto(src) {
+  if (src === photoCur) return; photoCur = src;
+  const img = new Image();
+  img.onload = () => {
+    if (photoCur !== src) return;
+    const next = document.getElementById(photoFlip ? 'photoA' : 'photoB');
+    const prev = document.getElementById(photoFlip ? 'photoB' : 'photoA');
+    photoFlip = !photoFlip;
+    next.style.backgroundImage = `url("${src}")`; next.dataset.on = '1'; prev.dataset.on = '0';
+  };
+  img.src = src;
+}
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('bali.' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('bali.' + k, JSON.stringify(v)); } catch {} },
+};
+const S = {
+  tab: store.get('tab', 'plan'), day: store.get('day', 0), cat: store.get('cat', 'all'),
+  plan: [], ideas: [], notes: [], expenses: [], fx: 500, db: null, writable: null, ready: false, editing: null,
+};
+const hashTab = (location.hash || '').slice(1);
+if (['plan', 'ideas', 'map', 'cost', 'info'].includes(hashTab)) S.tab = hashTab;
+
+/* ---------- time ---------- */
+const T0 = new Date(2027, 0, 5), T1 = new Date(2027, 0, 12);
+const todayIdx = () => { const n = new Date(); return Math.floor((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - T0) / 864e5); };
+function countdown() {
+  const now = new Date(); const day = todayIdx(); const el = $('#count');
+  if (now < T0) el.innerHTML = `還有<b>${-day}</b>`;
+  else if (now < T1) el.innerHTML = `Day<b>${day + 1}</b>`;
+  else el.innerHTML = `回來了<b>✓</b>`;
+}
+countdown(); setInterval(countdown, 60000);
+
+/* ---------- hero text + parallax ---------- */
+function renderHero() {
+  const h = $('#hero-text'), tb = $('#topbar-in');
+  if (S.tab === 'plan') {
+    const d = DAYS[S.day];
+    const items = S.plan.filter(p => p.day === S.day).sort(byTime);
+    const first = items[0];
+    h.innerHTML = `<div class="eyebrow">Day ${S.day + 1} · 週${d.w} · ${d.m} 月 ${d.d} 日</div><div class="hero-big">${esc(d.place)}</div><div class="hero-lead">${first ? `<b>${esc(first.time || '')}</b> ${esc(first.title)}` : esc(d.sub)}</div>`;
+    tb.innerHTML = `<span class="num">${d.m}.${d.d}</span><span>${esc(d.place)}</span><small>週${d.w} · Day ${S.day + 1}</small>`;
+  } else if (S.tab === 'ideas') {
+    const n = S.ideas.length, go = S.ideas.filter(i => i.status === 'go').length;
+    h.innerHTML = `<div class="eyebrow">口袋名單</div><div class="hero-big zh">想去的<br>地方</div><div class="hero-lead">${n ? `${n} 個候選 · <b>${go}</b> 個已確定` : '點右邊的圈圈，把想去的地方確定下來'}</div>`;
+    tb.innerHTML = `<span>口袋名單</span><small>${n} 個候選 · ${go} 個確定</small>`;
+  } else if (S.tab === 'cost') {
+    const t = costTotals();
+    h.innerHTML = `<div class="eyebrow">記帳 · ${MEMBERS.length} 人</div><div class="hero-big money">${t.n ? 'NT$ ' + fmtN(t.total) : 'NT$ 0'}</div><div class="hero-lead">${t.n ? `每人約 <b>NT$ ${fmtN(t.total / MEMBERS.length)}</b> · ${t.n} 筆 · 1 TWD = ${S.fx} IDR` : '還沒有消費，按下面的＋開始記'}</div>`;
+    tb.innerHTML = `<span>記帳</span><small>NT$ ${fmtN(t.total)} · ${t.n} 筆</small>`;
+  } else {
+    h.innerHTML = `<div class="eyebrow">JX765 · 1 月 5 日</div><div class="hero-big">TPE → DPS</div><div class="hero-lead">10:10 起飛 · 15:40 落地 · 桃園第二航廈最晚 <b>09:10</b> 前報到</div>`;
+    tb.innerHTML = `<span>資訊</span><small>航班 · 備忘</small>`;
+  }
+}
+let heroH = 0, ticking = false;
+function onScroll() {
+  if (ticking) return; ticking = true;
+  requestAnimationFrame(() => {
+    const y = Math.max(0, window.scrollY);
+    const hero = $('#hero');
+    hero.style.setProperty('--py', (y * .38) + 'px');
+    const t = $('#hero-text'); const k = Math.min(1, y / (heroH * .55));
+    t.style.setProperty('--ty', (y * .18) + 'px'); t.style.setProperty('--to', 1 - k);
+    $('#topbar').dataset.on = S.tab !== 'map' && y > heroH - 70 ? '1' : '0';
+    ticking = false;
+  });
+}
+addEventListener('scroll', onScroll, { passive: true });
+addEventListener('resize', () => { heroH = $('#hero').offsetHeight; onScroll(); });
+
+/* ---------- tabs ---------- */
+const tabBtns = [...document.querySelectorAll('.tabs [data-tab]')];
+function showTab(t) {
+  S.tab = t; store.set('tab', t);
+  tabBtns.forEach((b, i) => { const on = b.dataset.tab === t; b.setAttribute('aria-selected', on); if (on) $('#ind').style.transform = `translateX(${i * 100}%)`; });
+  ['plan', 'ideas', 'map', 'cost', 'info'].forEach(v => { $('#view-' + v).hidden = v !== t; });
+  $('#hero').hidden = t === 'map';
+  window.scrollTo({ top: 0 });
+  if (t === 'map') { $('#topbar').dataset.on = '0'; window.__mapShow?.(); } else { syncPhoto(); renderHero(); }
+}
+function syncPhoto() { setPhoto(S.tab === 'plan' ? PHOTOS.day[S.day] : S.tab === 'ideas' ? PHOTOS.ideas : S.tab === 'cost' ? PHOTOS.cost : PHOTOS.info); }
+tabBtns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+$('#to-map').addEventListener('click', () => showTab('map'));
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const check = '<svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg>';
+const byTime = (a, b) => (a.time || '99') < (b.time || '99') ? -1 : 1;
+let toastT; function toast(msg) { const t = $('#toast'); t.textContent = msg; t.dataset.on = '1'; clearTimeout(toastT); toastT = setTimeout(() => t.dataset.on = '0', 1800); }
+function emptyCard(kind) {
+  if (!S.db) return `<div class="empty"><b>資料庫還沒接上</b>把 Firebase 的設定填進去之後，四個人打開這個網址就會同步。</div>`;
+  if (!S.ready) return `<div class="empty">載入中</div>`;
+  const text = { plan: '這天還沒安排', ideas: '還沒有想去的地方', notes: '還沒有備忘', expenses: '還沒有消費' }[kind];
+  return `<div class="empty">${text}</div>`;
+}
+const canEdit = () => S.db && S.writable !== false;
+
+/* ---------- plan ---------- */
+function renderDays() {
+  const ti = todayIdx();
+  $('#days').innerHTML = DAYS.map((d, i) => `<button class="chip day" role="tab" data-i="${i}" aria-pressed="${i === S.day}" data-today="${i === ti ? 1 : 0}"><small>週${d.w}</small><span>${d.d}</span><i></i></button>`).join('');
+  $('#days').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { S.day = +b.dataset.i; store.set('day', S.day); renderDays(); renderPlan(); syncPhoto(); renderHero(); }));
+}
+function renderPlan() {
+  const items = S.plan.filter(p => p.day === S.day).sort(byTime);
+  const ti = todayIdx(); const now = new Date(); const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  let nowId = null;
+  if (ti === S.day) { for (const p of items) if ((p.time || '00:00') <= hm) nowId = p.id; }
+  let html = items.length ? items.map((p, idx) => {
+    const past = ti > S.day || (ti === S.day && nowId && items.findIndex(x => x.id === nowId) > idx);
+    return `<button class="tl-item" type="button" data-id="${p.id}" data-now="${p.id === nowId ? 1 : 0}" data-past="${past ? 1 : 0}">
+      <span class="time">${esc(p.time) || ''}</span><span class="rail"><i class="dot"></i></span>
+      <span class="card"><span class="title">${esc(p.title)}</span>${p.note ? `<div class="note">${esc(p.note)}</div>` : ''}${p.id === nowId ? '<span class="tag">現在</span>' : ''}</span>
+    </button>`; }).join('') : emptyCard('plan');
+  if (canEdit()) html += `<button class="add" type="button" id="add-plan">＋ 新增這天的行程</button>`;
+  $('#plan-list').innerHTML = html;
+  $('#plan-list').querySelectorAll('.tl-item').forEach(b => b.addEventListener('click', () => canEdit() && openSheet('plan', S.plan.find(p => p.id === b.dataset.id))));
+  $('#add-plan')?.addEventListener('click', () => openSheet('plan', null));
+  if (S.tab === 'plan') renderHero();
+}
+
+/* ---------- ideas ---------- */
+function renderCats() {
+  const all = [['all', '全部'], ...Object.entries(CATS)];
+  $('#cats').innerHTML = all.map(([k, v]) => { const n = k === 'all' ? S.ideas.length : S.ideas.filter(i => i.cat === k).length; return `<button class="chip" data-c="${k}" aria-pressed="${k === S.cat}">${v}${n ? `<span class="c">${n}</span>` : ''}</button>`; }).join('');
+  $('#cats').querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => { S.cat = b.dataset.c; store.set('cat', S.cat); renderCats(); renderIdeas(); }));
+}
+const thumb = i => THUMBS.has(i.id) ? `<span class="thumb"><img src="thumbs/${i.id}.jpg" alt="" loading="lazy" decoding="async"></span>` : `<span class="thumb">${GLYPH[i.cat] || '·'}</span>`;
+function meta(i) {
+  if (i.cat === 'shop' && (i.note || '').includes('｜')) { const [kind, shop, price] = i.note.split('｜'); return { area: [shop, i.area].filter(Boolean).join(' · '), price: (price || '').trim(), kind }; }
+  return { area: [CATS[i.cat], i.area, i.note].filter(Boolean).join(' · '), price: '' };
+}
+function renderGo() {
+  const go = S.ideas.filter(i => i.status === 'go').sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  $('#go-wrap').innerHTML = go.length ? `<div class="section"><h2>確定要去</h2><span class="n">${go.length}</span></div><div class="rail-go">${go.map(i => `
+    <button class="go-card" type="button" data-edit="${i.id}">${THUMBS.has(i.id) ? `<img src="thumbs/${i.id}.jpg" alt="" loading="lazy">` : ''}<span class="chk">${check}</span><span class="in"><span class="t">${esc(i.name)}</span><span class="a">${esc([CATS[i.cat], i.area].filter(Boolean).join(' · '))}</span></span></button>`).join('')}</div>` : '';
+  $('#go-wrap').querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => canEdit() && openSheet('ideas', S.ideas.find(i => i.id === b.dataset.edit))));
+}
+function renderIdeas() {
+  renderGo();
+  const items = S.ideas.filter(i => S.cat === 'all' || i.cat === S.cat)
+    .sort((a, b) => (a.status === 'go') === (b.status === 'go') ? (a.order ?? 0) - (b.order ?? 0) : a.status === 'go' ? -1 : 1);
+  let html = items.length ? items.map(i => { const m = meta(i); return `
+    <div class="row card" data-id="${i.id}" data-go="${i.status === 'go' ? 1 : 0}">
+      ${thumb(i)}
+      <button class="body" type="button" data-edit="${i.id}"><span class="title">${esc(i.name)}</span><div class="area">${esc(m.area)}</div>${m.price ? `<div class="price">${esc(m.price)}</div>` : ''}</button>
+      ${i.url ? `<a class="lnk" href="${esc(i.url)}" target="_blank" rel="noopener">${LINK_LABEL[i.cat] || '連結'}</a>` : ''}
+      <button class="mark" type="button" data-go="${i.id}" data-on="${i.status === 'go' ? 1 : 0}" aria-label="確定要去">${check}</button>
+    </div>`; }).join('') : emptyCard('ideas');
+  if (canEdit()) html += `<button class="add" type="button" id="add-idea">＋ 新增想去的地方</button>`;
+  $('#ideas-list').innerHTML = html;
+  $('#ideas-list').querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => canEdit() && openSheet('ideas', S.ideas.find(i => i.id === b.dataset.edit))));
+  $('#ideas-list').querySelectorAll('.mark[data-go]').forEach(b => b.addEventListener('click', async () => {
+    if (!canEdit()) return;
+    const it = S.ideas.find(i => i.id === b.dataset.go); const next = it.status === 'go' ? 'idea' : 'go';
+    b.dataset.on = next === 'go' ? 1 : 0; b.closest('.row').dataset.go = b.dataset.on;
+    try { await S.db.doc('ideas/' + it.id).update({ status: next }); } catch (e) { fail(e); }
+  }));
+  $('#add-idea')?.addEventListener('click', () => openSheet('ideas', null));
+  if (S.tab === 'ideas') renderHero();
+}
+
+/* ---------- notes ---------- */
+function renderNotes() {
+  const items = [...S.notes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  $('#notes-n').textContent = items.length || '';
+  let html = items.length ? `<div class="notes-grid">${items.map(n => `
+    <button class="note-card card${(n.body || '').length > 90 ? ' wide' : ''}" type="button" data-id="${n.id}" data-open="0">
+      <span class="title">${esc(n.title)}</span><div class="note">${esc(n.body)}</div>
+    </button>`).join('')}</div>` : emptyCard('notes');
+  if (canEdit()) html += `<button class="add" type="button" id="add-note">＋ 新增備忘</button>`;
+  $('#notes-list').innerHTML = html;
+  $('#notes-list').querySelectorAll('.note-card').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.open === '0') { b.dataset.open = '1'; return; }
+    canEdit() ? openSheet('notes', S.notes.find(n => n.id === b.dataset.id)) : (b.dataset.open = '0');
+  }));
+  $('#add-note')?.addEventListener('click', () => openSheet('notes', null));
+}
+
+/* ---------- 記帳 ---------- */
+function owedOf(e) {
+  const out = {}; const amt = +e.amount || 0;
+  if (e.mode === 'custom' && e.splits) { for (const m of MEMBERS) out[m] = +e.splits[m] || 0; }
+  else { const ms = (e.members && e.members.length) ? e.members : MEMBERS; for (const m of MEMBERS) out[m] = ms.includes(m) ? amt / ms.length : 0; }
+  return out;
+}
+function costTotals() {
+  const paid = {}, owed = {}; MEMBERS.forEach(m => { paid[m] = 0; owed[m] = 0; });
+  let total = 0;
+  for (const e of S.expenses) {
+    const t = toTWD(+e.amount || 0, e.cur); total += t;
+    if (paid[e.payer] != null) paid[e.payer] += t;
+    const o = owedOf(e); for (const m of MEMBERS) owed[m] += toTWD(o[m], e.cur);
+  }
+  const net = {}; MEMBERS.forEach(m => net[m] = paid[m] - owed[m]);
+  // greedy settlement
+  const cr = MEMBERS.filter(m => net[m] > 0.5).map(m => [m, net[m]]).sort((a, b) => b[1] - a[1]);
+  const db = MEMBERS.filter(m => net[m] < -0.5).map(m => [m, -net[m]]).sort((a, b) => b[1] - a[1]);
+  const tx = []; let i = 0, j = 0;
+  while (i < db.length && j < cr.length) {
+    const x = Math.min(db[i][1], cr[j][1]); tx.push([db[i][0], cr[j][0], x]);
+    db[i][1] -= x; cr[j][1] -= x; if (db[i][1] < 0.5) i++; if (cr[j][1] < 0.5) j++;
+  }
+  return { total, paid, owed, net, tx, n: S.expenses.length };
+}
+function renderSettle() {
+  const t = costTotals();
+  $('#settle').innerHTML = `<div class="settle card">
+    <div class="people">${MEMBERS.map(m => `<div class="pp2"><div class="nm">${esc(m)}</div><div class="net ${t.net[m] > 0.5 ? 'pos' : t.net[m] < -0.5 ? 'neg' : ''}">${t.net[m] > 0.5 ? '+' : t.net[m] < -0.5 ? '−' : ''}${fmtN(Math.abs(t.net[m]))}</div><div class="paid">付 ${fmtN(t.paid[m])}</div></div>`).join('')}</div>
+    ${t.tx.length ? `<div class="tx">${t.tx.map(([a, b, x]) => `<div><span><b>${esc(a)}</b> → <b>${esc(b)}</b></span><span class="amt">NT$ ${fmtN(x)}</span></div>`).join('')}</div>` : t.n ? `<div class="done">已經平了，不用互轉</div>` : `<div class="done">記了帳以後，這裡會算出誰要給誰多少</div>`}
+  </div>`;
+}
+const dayLabel = iso => { const d = new Date(iso); if (isNaN(d)) return '未標時間'; const i = Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - T0) / 864e5); return `${d.getMonth() + 1} 月 ${d.getDate()} 日${i >= 0 && i < 7 ? ` · Day ${i + 1}` : ''}`; };
+const hhmm = iso => { const d = new Date(iso); return isNaN(d) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+function renderExpenses() {
+  renderSettle();
+  const items = [...S.expenses].sort((a, b) => (b.time || '') < (a.time || '') ? -1 : 1);
+  let html = ''; let last = null;
+  for (const e of items) {
+    const day = dayLabel(e.time);
+    if (day !== last) { last = day; const sum = items.filter(x => dayLabel(x.time) === day).reduce((s, x) => s + toTWD(+x.amount || 0, x.cur), 0); html += `<div class="dayhead"><span>${esc(day)}</span><span class="num">NT$ ${fmtN(sum)}</span></div>`; }
+    const ms = e.mode === 'custom' ? '自訂分攤' : `${(e.members && e.members.length) ? e.members.length : MEMBERS.length} 人平攤`;
+    html += `<button class="exp card" type="button" data-id="${e.id}" style="margin-bottom:8px">
+      <span class="ico">${(ECATS[e.cat] || ECATS.other)[0]}</span>
+      <span class="body"><span class="title">${esc(e.title)}</span><span class="sub">${esc(e.payer)} 付 · ${ms}${e.time ? ' · ' + hhmm(e.time) : ''}</span></span>
+      <span class="amt"><div class="a">${fmtAmt(+e.amount || 0, e.cur)}</div>${e.cur === 'IDR' ? `<div class="b">≈ NT$ ${fmtN(toTWD(+e.amount || 0, 'IDR'))}</div>` : ''}</span>
+    </button>`;
+  }
+  if (!items.length) html += emptyCard('expenses');
+  if (canEdit()) html += `<button class="add" type="button" id="add-exp">＋ 新增一筆消費</button>`;
+  $('#exp-list').innerHTML = html;
+  $('#exp-list').querySelectorAll('.exp').forEach(b => b.addEventListener('click', () => canEdit() && openSheet('expenses', S.expenses.find(e => e.id === b.dataset.id))));
+  $('#add-exp')?.addEventListener('click', () => openSheet('expenses', null));
+  renderConv();
+  if (S.tab === 'cost') renderHero();
+}
+/* converter */
+const QUICK = [10000, 50000, 100000, 200000, 500000, 1000000];
+const numOf = v => +String(v).replace(/[^\d.]/g, '') || 0;
+function renderConv() {
+  $('#fx-label').textContent = `1 TWD = ${S.fx} IDR`;
+  $('#cv-rate').textContent = `1 TWD = ${S.fx} IDR · 10,000 IDR ≈ NT$ ${fmtN(10000 / S.fx)}`;
+  $('#cv-quick').innerHTML = QUICK.map(q => `<button type="button" data-q="${q}">${q >= 1e6 ? q / 1e6 + 'M' : q / 1000 + 'k'}</button>`).join('');
+  $('#cv-quick').querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => { $('#cv-idr').value = fmtN(+b.dataset.q); conv('idr'); }));
+  if ($('#cv-idr').value) conv('idr');
+}
+function conv(from) {
+  if (from === 'idr') { const v = numOf($('#cv-idr').value); $('#cv-twd').value = v ? fmtN(v / S.fx) : ''; }
+  else { const v = numOf($('#cv-twd').value); $('#cv-idr').value = v ? fmtN(v * S.fx) : ''; }
+}
+$('#cv-idr').addEventListener('input', () => conv('idr'));
+$('#cv-twd').addEventListener('input', () => conv('twd'));
+$('#cv-idr').addEventListener('blur', () => { const v = numOf($('#cv-idr').value); $('#cv-idr').value = v ? fmtN(v) : ''; });
+$('#cv-twd').addEventListener('blur', () => { const v = numOf($('#cv-twd').value); $('#cv-twd').value = v ? fmtN(v) : ''; });
+$('#fx-edit').addEventListener('click', () => canEdit() ? openSheet('fx', { rate: S.fx }) : toast('登入後才能改'));
+
+/* ---------- sheet ---------- */
+const nowLocal = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+const FIELDS = {
+  plan: d => `
+    <div class="two"><input id="f-time" type="time" value="${esc(d?.time)}" aria-label="時間"><div class="seg" id="f-day">${DAYS.map((x, i) => `<button type="button" data-v="${i}" aria-pressed="${(d?.day ?? S.day) === i}">${x.d}</button>`).join('')}</div></div>
+    <input id="f-title" placeholder="要做什麼" value="${esc(d?.title)}" required>
+    <textarea id="f-note" placeholder="備註、地址、訂位資訊">${esc(d?.note)}</textarea>`,
+  ideas: d => `
+    <input id="f-name" placeholder="地點或活動" value="${esc(d?.name)}" required>
+    <div class="seg" id="f-cat">${Object.entries(CATS).map(([k, v]) => `<button type="button" data-v="${k}" aria-pressed="${(d?.cat ?? (S.cat === 'all' ? 'sight' : S.cat)) === k}">${v}</button>`).join('')}</div>
+    <input id="f-area" placeholder="區域，例如 Ubud、Uluwatu" value="${esc(d?.area)}">
+    <input id="f-inote" placeholder="一句備註" value="${esc(d?.note)}">
+    <input id="f-url" type="url" placeholder="連結，選填" value="${esc(d?.url)}">`,
+  notes: d => `
+    <input id="f-ntitle" placeholder="標題" value="${esc(d?.title)}" required>
+    <textarea id="f-body" placeholder="內容">${esc(d?.body)}</textarea>`,
+  expenses: d => `
+    <input id="f-etitle" placeholder="消費內容，例如 Jimbaran 晚餐" value="${esc(d?.title)}" required>
+    <div class="two"><input id="f-amt" type="text" inputmode="decimal" placeholder="金額" value="${d?.amount ?? ''}" required><div class="seg cur" id="f-cur">${['IDR', 'TWD'].map(c => `<button type="button" data-v="${c}" aria-pressed="${(d?.cur || 'IDR') === c}">${c}</button>`).join('')}</div></div>
+    <div class="seg" id="f-ecat">${Object.entries(ECATS).map(([k, [ic, v]]) => `<button type="button" data-v="${k}" aria-pressed="${(d?.cat || 'food') === k}">${ic} ${v}</button>`).join('')}</div>
+    <label class="lbl">誰出的</label>
+    <div class="seg" id="f-payer">${MEMBERS.map(m => `<button type="button" data-v="${esc(m)}" aria-pressed="${(d?.payer || MEMBERS[0]) === m}">${esc(m)}</button>`).join('')}</div>
+    <label class="lbl">誰分攤</label>
+    <div class="seg" id="f-mode"><button type="button" data-v="equal" aria-pressed="${(d?.mode || 'equal') === 'equal'}">平攤</button><button type="button" data-v="custom" aria-pressed="${d?.mode === 'custom'}">自訂金額</button></div>
+    <div class="seg multi" id="f-members" ${d?.mode === 'custom' ? 'hidden' : ''}>${MEMBERS.map(m => `<button type="button" data-v="${esc(m)}" aria-pressed="${!(d?.members) || !d.members.length || d.members.includes(m)}">${esc(m)}</button>`).join('')}</div>
+    <div class="splits" id="f-splits" ${d?.mode === 'custom' ? '' : 'hidden'}>${MEMBERS.map(m => `<label><span>${esc(m)}</span><input type="text" inputmode="decimal" data-m="${esc(m)}" placeholder="0" value="${d?.splits?.[m] ?? ''}"></label>`).join('')}</div>
+    <div class="hint" id="f-hint"></div>
+    <input id="f-etime" type="datetime-local" value="${esc(d?.time || nowLocal())}" aria-label="時間">`,
+  fx: d => `
+    <input id="f-rate" type="text" inputmode="decimal" placeholder="500" value="${d?.rate ?? ''}" required>
+    <div class="hint">1 台幣等於幾印尼盾。2026 年 10 月約 500；出發前查一下再改。</div>`,
+};
+const TITLES = { plan: ['新增行程', '編輯行程'], ideas: ['新增地點', '編輯地點'], notes: ['新增備忘', '編輯備忘'], expenses: ['新增消費', '編輯消費'], fx: ['匯率', '匯率'] };
+function openSheet(kind, doc) {
+  S.editing = { kind, doc };
+  $('#sheet-title').textContent = TITLES[kind][doc ? 1 : 0];
+  $('#fields').innerHTML = FIELDS[kind](doc);
+  $('#fields').querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    if (seg.classList.contains('multi')) b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
+    else seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (seg.id === 'f-mode') { const c = b.dataset.v === 'custom'; $('#f-members').hidden = c; $('#f-splits').hidden = !c; }
+  })));
+  $('#del').hidden = !doc || kind === 'fx';
+  $('#dim').dataset.open = '1'; $('#sheet').dataset.open = '1';
+  setTimeout(() => $('#fields input:not([type=time])')?.focus(), 350);
+}
+function closeSheet() { $('#dim').dataset.open = '0'; $('#sheet').dataset.open = '0'; S.editing = null; }
+$('#dim').addEventListener('click', closeSheet);
+$('#cancel').addEventListener('click', closeSheet);
+const segVal = id => $(`#${id} [aria-pressed="true"]`)?.dataset.v;
+function fail(e) { console.error(e); if (e && e.code === 'invalid_argument' && S.writable === null) { S.writable = false; renderAll(); } toast('沒有存成功'); }
+$('#sheet').addEventListener('submit', async ev => {
+  ev.preventDefault(); if (!S.editing || !S.db) return;
+  const { kind, doc } = S.editing; let data;
+  if (kind === 'plan') data = { day: +segVal('f-day'), time: $('#f-time').value, title: $('#f-title').value.trim(), note: $('#f-note').value.trim() };
+  if (kind === 'ideas') data = { name: $('#f-name').value.trim(), cat: segVal('f-cat'), area: $('#f-area').value.trim(), note: $('#f-inote').value.trim(), url: $('#f-url').value.trim(), status: doc?.status || 'idea', order: doc?.order ?? Date.now() };
+  if (kind === 'notes') data = { title: $('#f-ntitle').value.trim(), body: $('#f-body').value.trim(), order: doc?.order ?? Date.now() };
+  if (kind === 'expenses') {
+    const amount = numOf($('#f-amt').value); const mode = segVal('f-mode');
+    const members = [...$('#f-members').querySelectorAll('[aria-pressed="true"]')].map(b => b.dataset.v);
+    const splits = {}; $('#f-splits').querySelectorAll('[data-m]').forEach(i => { splits[i.dataset.m] = numOf(i.value); });
+    if (!amount) return toast('要填金額');
+    if (mode === 'equal' && !members.length) return toast('至少選一個人分攤');
+    if (mode === 'custom') { const sum = Object.values(splits).reduce((a, b) => a + b, 0); if (Math.abs(sum - amount) > Math.max(1, amount * .005)) return toast(`分攤加起來是 ${fmtN(sum)}，和金額不一樣`); }
+    data = { title: $('#f-etitle').value.trim(), amount, cur: segVal('f-cur'), cat: segVal('f-ecat'), payer: segVal('f-payer'), mode, members, splits, time: $('#f-etime').value };
+  }
+  if (kind === 'fx') {
+    const rate = numOf($('#f-rate').value); if (!rate) return toast('要填匯率');
+    $('#save').disabled = true;
+    try { await S.db.doc('settings/fx').set({ idr_per_twd: rate }); closeSheet(); toast('匯率已更新'); } catch (e) { fail(e); } finally { $('#save').disabled = false; }
+    return;
+  }
+  $('#save').disabled = true;
+  try {
+    if (doc) await S.db.doc(kind + '/' + doc.id).set(data); else await S.db.collection(kind).add(data);
+    closeSheet(); toast('已儲存');
+  } catch (e) { fail(e); } finally { $('#save').disabled = false; }
+});
+$('#del').addEventListener('click', async () => {
+  const { kind, doc } = S.editing || {}; if (!doc) return;
+  try { await S.db.doc(kind + '/' + doc.id).delete(); closeSheet(); toast('已刪除'); } catch (e) { fail(e); }
+});
+
+/* ---------- copy ---------- */
+document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+  const v = b.dataset.copy;
+  navigator.clipboard?.writeText(v).then(() => toast('已複製 ' + v)).catch(() => { const r = document.createRange(); r.selectNodeContents($('#pnr')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+}));
+
+/* ---------- data ---------- */
+function renderAll() { renderDays(); renderPlan(); renderCats(); renderIdeas(); renderNotes(); renderExpenses(); renderHero(); }
+showTab(S.tab);
+renderAll();
+heroH = $('#hero').offsetHeight; onScroll();
+(async () => {
+  const [db, user] = await Promise.all([window.claude?.use?.('db'), window.claude?.use?.('user')]);
+  S.db = db || null;
+  if (!db) { renderAll(); return; }
+  try { S.writable = user ? await user.can('data.write') : null; } catch { S.writable = null; }
+  const sub = (col, key, after) => db.collection(col).onSnapshot(snap => {
+    S[key] = snap.docs.map(d => ({ id: d.id, ...d.data() })); S.ready = true; after();
+  }, e => { console.error(col, e); S.ready = true; after(); });
+  sub('plan', 'plan', () => { renderPlan(); });
+  sub('ideas', 'ideas', () => { renderCats(); renderIdeas(); });
+  sub('notes', 'notes', renderNotes);
+  sub('expenses', 'expenses', renderExpenses);
+  try { db.doc('settings/fx').onSnapshot(d => { const v = d && d.exists !== false && d.data ? d.data() : null; if (v && v.idr_per_twd) { S.fx = +v.idr_per_twd; renderExpenses(); } }, () => {}); } catch (e) {}
+  renderAll();
+})();
+})();
+</script>
+<script>
+/* ---------- 口袋地圖 (map tab) ---------- */
+(() => {
+const PLACES=[{"n":"Copenhagen Berawa","c":"網美餐廳","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"北歐風早午餐，可自組早餐盤，酸種麵包是招牌；室內座多，雨天避雨好去處","p":"$","s":"https://www.youtube.com/watch?v=VPcjg8ckiY4","y":2025,"g":"https://www.google.com/maps/search/Copenhagen%20Berawa/@-8.658949,115.138132,17z","lat":-8.658949,"lng":115.138132,"img":"","pp":110000,"sh":"","ev":"YouTuber 林宣 + 部落格，Google 4.7 (1.5k+)","k":"","rain":true,"h":"youtube.com"},{"n":"Gigi Susu","c":"網美餐廳","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"歐式拱窗烘焙咖啡店，巨型可頌與甜點強；咖啡普通、音樂偏吵，順逛 Batu Bolong 選物店","p":"$","s":"https://www.threads.com/@emipeily.fr/post/DKlYynhx3nb/","y":2025,"g":"https://www.google.com/maps/search/Gigi%20Susu/@-8.65382,115.132228,17z","lat":-8.65382,"lng":115.132228,"img":"gigi-susu","pp":90000,"sh":"","ev":"Threads + 小紅書 2 篇 + 2 位 YouTuber，Google 4.7 (4k+)","k":"","rain":false,"h":"threads.com"},{"n":"Milk & Madu Berawa","c":"網美餐廳","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"蒼古人氣澳式早午餐與窯烤披薩，全天營業；週末尖峰要排隊","p":"$$","s":"https://www.youtube.com/watch?v=VPcjg8ckiY4","y":2025,"g":"https://www.google.com/maps/search/Milk%20%26%20Madu%20Berawa/@-8.660831,115.145696,17z","lat":-8.660831,"lng":115.145696,"img":"milk-madu-berawa","pp":130000,"sh":"","ev":"YouTuber 林宣 + 部落格 3 篇，Google 4.6 (4k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Penny Lane","c":"網美餐廳","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"摩洛哥波西米亞院落像電影場景，推 buttermilk chicken；候位長建議早到，戶外蒼蠅略多","p":"$$","s":"https://www.dcard.tw/f/travel/p/259730822","y":2025,"g":"https://www.google.com/maps/search/Penny%20Lane/@-8.653356,115.130567,17z","lat":-8.653356,"lng":115.130567,"img":"penny-lane","pp":165000,"sh":"","ev":"Dcard 5 篇 + 小紅書，Google 4.5 (7k)","k":"","rain":false,"h":"dcard.tw"},{"n":"AKASA Specialty Coffee","c":"網美餐廳","a":"Kintamani","r":"更遠","w":"正對巴杜爾火山的懸崖咖啡廳，6 點開門看日出雲海；餐普通，雨季易起霧，另收 5 萬門票","p":"$","s":"https://www.dcard.tw/f/travel/p/259636758","y":2025,"g":"https://www.google.com/maps/search/AKASA%20Specialty%20Coffee/@-8.279617,115.357559,17z","lat":-8.279617,"lng":115.357559,"img":"","pp":100000,"sh":"","ev":"Dcard 4 篇 + 小紅書 2 篇，Google 4.5 (10k)","k":"","rain":false,"h":"dcard.tw"},{"n":"El Lago","c":"網美餐廳","a":"Kintamani","r":"更遠","w":"不想坐吉普車也能看火山日出的餐廳，兩人早餐約 NT$420；一開門就到才搶得到拱門位","p":"$","s":"https://www.dcard.tw/f/travel/p/259043392","y":2025,"g":"https://www.google.com/maps/search/El%20Lago/@-8.267508,115.342061,17z","lat":-8.267508,"lng":115.342061,"img":"el-lago","pp":120000,"sh":"","ev":"Dcard 2 篇獨立，Google 4.6 (1k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Montana Del Cafe","c":"網美餐廳","a":"Kintamani","r":"更遠","w":"白色挑高玻璃屋看火山日出，咖啡約 5 萬；入金塔馬尼區收 5 萬地質公園費","p":"$","s":"https://vocus.cc/article/6815a33bfd8978000124e4fc","y":2025,"g":"https://www.google.com/maps/search/Montana%20Del%20Cafe/@-8.267815,115.342307,17z","lat":-8.267815,"lng":115.342307,"img":"montana-del-cafe","pp":90000,"sh":"","ev":"方格子首發 + Wanderlog，Google 4.7 (6k)","k":"","rain":false,"h":"vocus.cc"},{"n":"Crumb & Coaster","c":"網美餐廳","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"庫塔少見的質感早午餐，法式吐司、手撕豬堡；離 Beachwalk 步行 8 分，戶外有菸味","p":"$","s":"https://www.dcard.tw/f/travel/p/260393115","y":2025,"g":"https://www.google.com/maps/search/Crumb%20%26%20Coaster/@-8.717128,115.172428,17z","lat":-8.717128,"lng":115.172428,"img":"crumb-coaster","pp":130000,"sh":"","ev":"Dcard 3 篇 + Threads，Google 4.7 (6.9k)","k":"","rain":false,"h":"dcard.tw"},{"n":"Starbucks Reserve Dewata","c":"網美餐廳","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"東南亞最大星巴克，有咖啡園與烘豆展示、室內寬敞；位於 Sunset Road 需搭車","p":"$","s":"https://www.youtube.com/watch?v=kCh3Sf-v4tE","y":2026,"g":"https://www.google.com/maps/search/Starbucks%20Reserve%20Dewata/@-8.691724,115.173136,17z","lat":-8.691724,"lng":115.173136,"img":"starbucks-reserve-dewata","pp":75000,"sh":"","ev":"YouTuber Nick's Snaps + 多篇中文攻略，Google 4.6 (12k+)","k":"","rain":true,"h":"youtube.com"},{"n":"Kynd Community","c":"網美餐廳","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"粉紅色系純素咖啡館，巴西莓碗與鬆餅繽紛上鏡，峇里最常被拍的店之一","p":"$$","s":"https://hungrygowhere.com/what-to-eat/bali-cafes/","y":2025,"g":"https://www.google.com/maps/search/Kynd%20Community/@-8.675092,115.156724,17z","lat":-8.675092,"lng":115.156724,"img":"kynd-community","pp":170000,"sh":"","ev":"","k":"","rain":false,"h":"hungrygowhere.com"},{"n":"Mano Beach House","c":"網美餐廳","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"海景第一排看夕陽，座位各有低消；海鮮不貴，日落前很曬建議 17:00 後到","p":"$$","s":"https://www.dcard.tw/f/travel/p/262259532","y":2026,"g":"https://www.google.com/maps/search/Mano%20Beach%20House/@-8.681817,115.151483,17z","lat":-8.681817,"lng":115.151483,"img":"mano-beach-house","pp":220000,"sh":"","ev":"Dcard 3 篇獨立，Google 4.5 (3k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Nook Bali","c":"網美餐廳","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"Kerobokan極簡風餐廳，360度稻田環繞，印尼與西式菜價格親民","p":"$","s":"https://whatsnewindonesia.com/ultimate-guide/bali/food-drink/10-restaurants-bali-rice-paddy-views","y":2026,"g":"https://www.google.com/maps/search/Nook%20Bali/@-8.669541,115.161202,17z","lat":-8.669541,"lng":115.161202,"img":"nook-bali","pp":120000,"sh":"","ev":"","k":"","rain":false,"h":"whatsnewindonesia.com"},{"n":"Tis Cafe Ubud","c":"網美餐廳","a":"Tegallalang","r":"Ubud 周邊","w":"位於Tegallalang梯田正中央，附無邊際泳池，披薩脆皮鴨配梯田景","p":"$$","s":"https://whatsnewindonesia.com/ultimate-guide/bali/food-drink/10-restaurants-bali-rice-paddy-views","y":2026,"g":"https://www.google.com/maps/search/Tis%20Cafe%20Ubud/@-8.430711,115.278577,17z","lat":-8.430711,"lng":115.278577,"img":"tis-cafe-ubud","pp":180000,"sh":"","ev":"","k":"","rain":false,"h":"whatsnewindonesia.com"},{"n":"Cantina Rooftop Ubud","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"Campuhan屋頂近360度叢林與Gunung Lebah寺景，分享小食配創意調酒","p":"$$","s":"https://www.ubudhood.com/eat-drink/best-restaurants-in-ubud","y":2025,"g":"https://www.google.com/maps/search/Cantina%20Rooftop%20Ubud/@-8.504764,115.254103,17z","lat":-8.504764,"lng":115.254103,"img":"cantina-rooftop-ubud","pp":230000,"sh":"","ev":"","k":"","rain":false,"h":"ubudhood.com"},{"n":"Fold Ubud","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"手工酸種麵包與可頌出名的小型烘焙咖啡店，早上去才有完整品項","p":"$","s":"https://www.youtube.com/watch?v=imJ3kPM6X24","y":2026,"g":"https://www.google.com/maps/search/Fold%20Ubud/@-8.518957,115.263195,17z","lat":-8.518957,"lng":115.263195,"img":"fold-ubud","pp":90000,"sh":"","ev":"2 位 YouTuber，Google 4.7 (1k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Folk Pool & Gardens","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"烏布市中心花園泳池餐廳，有swim-up bar與電影夜，入池僅IDR 50k","p":"$$","s":"https://www.nowbali.co.id/the-five-best-pool-clubs-in-ubud-where-to-swim-sip-and-unwind/","y":2025,"g":"https://www.google.com/maps/search/Folk%20Pool%20%26%20Gardens/@-8.513879,115.260238,17z","lat":-8.513879,"lng":115.260238,"img":"folk-pool-gardens","pp":240000,"sh":"","ev":"","k":"","rain":false,"h":"nowbali.co.id"},{"n":"Ivy Cafe","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"綠意包圍的健康早午餐，班尼迪克蛋、火龍果抹茶；7 點開門，位於 Pengosekan","p":"$","s":"https://www.xiaohongshu.com/explore/697f8b2e000000002200a1e8","y":2026,"g":"https://www.google.com/maps/search/Ivy%20Cafe/@-8.520952,115.262986,17z","lat":-8.520952,"lng":115.262986,"img":"ivy-cafe","pp":100000,"sh":"","ev":"小紅書 + Threads 清單，Google 4.7 (570)","k":"","rain":false,"h":"xiaohongshu.com"},{"n":"Lazy Cats Cafe","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"烏布大街二樓復古植栽咖啡廳，蔬食早午餐拼盤、草莓起司蛋糕；臨街略吵","p":"$","s":"https://www.threads.com/@elliegototravel/post/DNGKlSxzI7t/","y":2025,"g":"https://www.google.com/maps/search/Lazy%20Cats%20Cafe/@-8.505275,115.258246,17z","lat":-8.505275,"lng":115.258246,"img":"lazy-cats-cafe","pp":110000,"sh":"","ev":"方格子實測 + Threads + Eatbook，Google 4.5 (3k)","k":"","rain":true,"h":"threads.com"},{"n":"Pison Ubud","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"Jl. Hanoman稻田景精品咖啡館，設計上鏡，早午餐約IDR 62k起","p":"$","s":"https://thehoneycombers.com/bali/best-cafes-in-ubud/","y":2026,"g":"https://www.google.com/maps/search/Pison%20Ubud/@-8.518294,115.263556,17z","lat":-8.518294,"lng":115.263556,"img":"pison-ubud","pp":150000,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"RÜSTERS","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"稻田景觀咖啡＋烘焙＋陶藝工作室，離市中心騎車約 10 分鐘","p":"$","s":"https://www.youtube.com/watch?v=uM07PbCSulU","y":2025,"g":"https://www.google.com/maps/search/R%C3%9CSTERS/@-8.536508,115.243688,17z","lat":-8.536508,"lng":115.243688,"img":"r-sters","pp":110000,"sh":"","ev":"YouTuber 402.travel + Honeycombers 2026，Google 4.6 (1k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Seniman Coffee Studio","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"烏布精品咖啡標竿，自烘單品與咖啡調酒；週一六有 2 小時手沖／拉花工作坊 45 萬，雨天好去處","p":"$","s":"https://www.senimancoffee.com/workshop","y":2026,"g":"https://www.google.com/maps/search/Seniman%20Coffee%20Studio/@-8.506718,115.265205,17z","lat":-8.506718,"lng":115.265205,"img":"seniman-coffee-studio","pp":70000,"sh":"","ev":"Dcard、小紅書、方格子、2 位 YouTuber 皆推，Google 4.6 (4.7k)","k":"","rain":true,"h":"senimancoffee.com"},{"n":"Suka Espresso Ubud","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"澳式早午餐與松露炒蛋出名，晚上變小酒館；Uluwatu 也有分店","p":"$","s":"https://www.youtube.com/watch?v=s5xSNtV5vjI","y":2026,"g":"https://www.google.com/maps/search/Suka%20Espresso%20Ubud/@-8.52111,115.26318,17z","lat":-8.52111,"lng":115.26318,"img":"","pp":110000,"sh":"","ev":"2 位 YouTuber + Honeycombers 2026，Google 4.7 (1.5k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Taroo Paddy Pool Lounge","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"Mas村稻田旁泳池酒廊，溫水池配雞尾酒與國際菜，稻田景一流","p":"$$","s":"https://whatsnewindonesia.com/ultimate-guide/bali/food-drink/10-restaurants-bali-rice-paddy-views","y":2026,"g":"https://www.google.com/maps/search/Taroo%20Paddy%20Pool%20Lounge/@-8.557088,115.274163,17z","lat":-8.557088,"lng":115.274163,"img":"taroo-paddy-pool-lounge","pp":150000,"sh":"","ev":"","k":"","rain":false,"h":"whatsnewindonesia.com"},{"n":"Tukies Coconut Shop","c":"網美餐廳","a":"Ubud","r":"Ubud 周邊","w":"烏布皇宮旁椰子冰專門店，椰子冰約 3 萬配現剖椰肉；無冷氣，消暑小歇","p":"$","s":"https://www.dcard.tw/f/travel/p/258032610","y":2025,"g":"https://www.google.com/maps/search/Tukies%20Coconut%20Shop/@-8.510971,115.260928,17z","lat":-8.510971,"lng":115.260928,"img":"tukies-coconut-shop","pp":40000,"sh":"","ev":"Dcard 5 篇 + Vocus，Google 4.6 (1k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Alchemy Uluwatu","c":"網美餐廳","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"全素健康咖啡廳＋選物店＋瑜伽空間，Smoothie bowl 招牌；非素食者可能嫌清淡","p":"$$","s":"https://www.youtube.com/watch?v=-xJPC9_XSZ4","y":2025,"g":"https://www.google.com/maps/search/Alchemy%20Uluwatu/@-8.814471,115.113157,17z","lat":-8.814471,"lng":115.113157,"img":"","pp":130000,"sh":"","ev":"YouTuber + 部落格 2 篇，Google 4.6 (1k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Bukit Cafe","c":"網美餐廳","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"烏魯瓦圖最受歡迎早午餐，班尼迪克蛋與 Smoothie 出名；早上 9 點後要候位","p":"$","s":"https://www.youtube.com/watch?v=-xJPC9_XSZ4","y":2025,"g":"https://www.google.com/maps/search/Bukit%20Cafe/@-8.81384,115.109456,17z","lat":-8.81384,"lng":115.109456,"img":"bukit-cafe","pp":110000,"sh":"","ev":"2 位 YouTuber，Google 4.6 (4k+)","k":"","rain":false,"h":"youtube.com"},{"n":"La Terrazza Uluwatu","c":"網美餐廳","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Blue Point 旁的義式夕陽餐廳，風景無價、酒好喝；白醬麵吃到後面偏膩","p":"$$","s":"https://www.dcard.tw/f/travel/p/255534955","y":2024,"g":"https://www.google.com/maps/search/La%20Terrazza%20Uluwatu/@-8.81523,115.088722,17z","lat":-8.81523,"lng":115.088722,"img":"la-terrazza-uluwatu","pp":200000,"sh":"","ev":"Dcard 詳細獨旅紀錄，Google 4.6","k":"","rain":false,"h":"dcard.tw"},{"n":"Suka Espresso Uluwatu","c":"網美餐廳","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Labuansait 人氣早午餐，6 萬早餐特餐、酸種吐司；有室內座、禁筆電，早上排隊且吵","p":"$","s":"https://hungrypursuit.com/14-best-uluwatu-restaurants-bali/","y":2026,"g":"https://www.google.com/maps/search/Suka%20Espresso%20Uluwatu/@-8.81635,115.096026,17z","lat":-8.81635,"lng":115.096026,"img":"suka-espresso-uluwatu","pp":110000,"sh":"","ev":"Hungry Pursuit 2026 + 多篇咖啡部落格，Google 4.8 (11k)","k":"","rain":true,"h":"hungrypursuit.com"},{"n":"Ulekan","c":"餐廳","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"溫馨的傳統印尼餐廳，仁當與參巴醬拼盤被多篇指南點名","p":"$$","s":"https://www.thebalibible.com/guides/best-restaurants-to-try-in-bali-for-2025-a-culinary-adventure-awaits","y":2025,"g":"https://www.google.com/maps/search/Ulekan/@-8.66016,115.143117,17z","lat":-8.66016,"lng":115.143117,"img":"ulekan","pp":180000,"sh":"","ev":"","k":"","rain":false,"h":"thebalibible.com"},{"n":"WAHAHA Pork Ribs Jimbaran","c":"餐廳","a":"Jimbaran","r":"Uluwatu · Jimbaran · Nusa Dua","w":"豬肋排與脆皮豬腳名店，兩人點小份剛好；醬偏甜，豬肉炒飯超推","p":"$$","s":"https://www.dcard.tw/f/travel/p/259043392","y":2025,"g":"https://www.google.com/maps/search/WAHAHA%20Pork%20Ribs%20Jimbaran/@-8.785828,115.164086,17z","lat":-8.785828,"lng":115.164086,"img":"wahaha-pork-ribs-jimbaran","pp":200000,"sh":"","ev":"Dcard 3 篇 + 部落格，Google 4.5 (3k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Fat Chow Kuta","c":"餐廳","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"庫塔巷內亞洲融合菜，叉燒包與牛肉河粉出名；Poppies Lane 塞車步行較快","p":"$$","s":"https://www.youtube.com/watch?v=oriMeUcco_8","y":2024,"g":"https://www.google.com/maps/search/Fat%20Chow%20Kuta/@-8.71833,115.170225,17z","lat":-8.71833,"lng":115.170225,"img":"fat-chow-kuta","pp":170000,"sh":"","ev":"YouTuber WE4 Travel + 部落格，Google 4.5 (3k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Made's Warung Kuta","c":"餐廳","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"1969 老店、觀光客友善印尼菜，沙嗲與炒麵推；炒飯很辣、香蕉煎餅雷，每道 4–9 萬","p":"$","s":"https://www.threads.com/@pk2168/post/DWvipNlkYJU/","y":2026,"g":"https://www.google.com/maps/search/Made%27s%20Warung%20Kuta/@-8.722296,115.174951,17z","lat":-8.722296,"lng":115.174951,"img":"made-s-warung-kuta","pp":130000,"sh":"","ev":"Threads 2026 逐道價格首發，Google 4.4 (7.9k)","k":"","rain":false,"h":"threads.com"},{"n":"Naughty Nuri's Warung Seminyak","c":"餐廳","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"炭烤豬肋排與烤乳豬必點，份量大適合 4 人分食；重鹹配啤酒，排隊常態","p":"$$","s":"https://www.dcard.tw/f/travel/p/261463537","y":2026,"g":"https://www.google.com/maps/search/Naughty%20Nuri%27s%20Warung%20Seminyak/@-8.677553,115.16768,17z","lat":-8.677553,"lng":115.16768,"img":"naughty-nuri-s-warung-seminyak","pp":170000,"sh":"","ev":"Dcard 3 篇 + PTT + 3 位 YouTuber，Google 4.5 (12k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Sisterfields","c":"餐廳","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"明亮極簡的澳式早午餐名店，法式吐司與玉米糕薯條是招牌","p":"$$","s":"https://hungrygowhere.com/what-to-eat/bali-cafes/","y":2025,"g":"https://www.google.com/maps/search/Sisterfields/@-8.682954,115.157565,17z","lat":-8.682954,"lng":115.157565,"img":"sisterfields","pp":200000,"sh":"","ev":"","k":"","rain":false,"h":"hungrygowhere.com"},{"n":"Warung Nia Balinese Food & Pork Ribs","c":"餐廳","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"招牌蜜汁豬肋排約 15 萬，沙嗲更推；加稅服務費、露天偏熱，適合多人分食","p":"$$","s":"https://www.xiaohongshu.com/explore/697acea2000000001a0288f5","y":2026,"g":"https://www.google.com/maps/search/Warung%20Nia%20Balinese%20Food%20%26%20Pork%20Ribs/@-8.686033,115.156618,17z","lat":-8.686033,"lng":115.156618,"img":"warung-nia-balinese-food-pork-ribs","pp":180000,"sh":"","ev":"小紅書 + 方格子實測，Google 4.8 (8.4k)","k":"","rain":false,"h":"xiaohongshu.com"},{"n":"Bebek Tebasari Resto","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"水上發呆亭吃髒鴨飯，外酥內多汁；要點 crispy duck 才是髒鴨，晚上氛圍最好","p":"$$","s":"https://www.dcard.tw/f/travel/p/259730822","y":2025,"g":"https://www.google.com/maps/search/Bebek%20Tebasari%20Resto/@-8.545657,115.256636,17z","lat":-8.545657,"lng":115.256636,"img":"bebek-tebasari-resto","pp":140000,"sh":"","ev":"Dcard 7 篇獨立遊記，Google 4.5 (2k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Bebek Tepi Sawah","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"稻田旁吃酥脆髒鴨約 13.5 萬，中午稻田最綠最好拍；鴨肉偶爾偏乾","p":"$$","s":"https://lokasibali.com/lokasi/bebek-tepi-sawah","y":2026,"g":"https://www.google.com/maps/search/Bebek%20Tepi%20Sawah/@-8.523744,115.27285,17z","lat":-8.523744,"lng":115.27285,"img":"bebek-tepi-sawah","pp":170000,"sh":"","ev":"Threads 推薦 + 評論彙整，Google 4.6 (5.6k)","k":"","rain":false,"h":"lokasibali.com"},{"n":"Bird's Nest Thai Kitchen","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"Sayan 路邊小泰菜館，冬陰功肉丸湯、打拋飯、泰奶；人均約 11 萬含稅，離市區騎車 20 分","p":"$","s":"https://www.xiaohongshu.com/explore/68af1825000000001d02c5f1","y":2025,"g":"https://www.google.com/maps/search/Bird%27s%20Nest%20Thai%20Kitchen/@-8.498016,115.244968,17z","lat":-8.498016,"lng":115.244968,"img":"bird-s-nest-thai-kitchen","pp":110000,"sh":"","ev":"小紅書詳細首發 + Wanderlog，Google 4.5 (908)","k":"","rain":false,"h":"xiaohongshu.com"},{"n":"Ibu Susu Bar & Kitchen","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"Monkey Forest路泛亞分享小食，本地經營氣氛熱鬧，調酒與歡樂時光出名","p":"$$","s":"https://www.ubudhood.com/eat-drink/best-restaurants-in-ubud","y":2025,"g":"https://www.google.com/maps/search/Ibu%20Susu%20Bar%20%26%20Kitchen/@-8.518191,115.262535,17z","lat":-8.518191,"lng":115.262535,"img":"ibu-susu-bar-kitchen","pp":220000,"sh":"","ev":"","k":"","rain":false,"h":"ubudhood.com"},{"n":"Kagemusha","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"藏在樹林裡的日式餐廳，雞翅是隱藏菜單必點；半開放空間蟲多、位置偏僻","p":"$","s":"https://www.dcard.tw/f/travel/p/256416953","y":2025,"g":"https://www.google.com/maps/search/Kagemusha/@-8.527883,115.25628,17z","lat":-8.527883,"lng":115.25628,"img":"kagemusha","pp":130000,"sh":"","ev":"Dcard 3 篇皆點名雞翅，Google 4.5 (1k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Kebun Bistro","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"南法風花園小酒館，蒜香奶油蝦、燉飯、披薩必點；主餐 15–25 萬偏貴，前一天訂位","p":"$$","s":"https://www.dcard.tw/f/travel/p/261224242","y":2026,"g":"https://www.google.com/maps/search/Kebun%20Bistro/@-8.51376,115.264182,17z","lat":-8.51376,"lng":115.264182,"img":"kebun-bistro","pp":250000,"sh":"","ev":"Dcard 5 篇 + Threads + 小紅書，Google 4.6 (3k+)；貼近預算上限","k":"","rain":false,"h":"dcard.tw"},{"n":"L'Osteria Pizza e Cucina Ubud","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"義大利人開的窯烤披薩店，份量大價格親民；務必 WhatsApp 訂位坐二樓，一樓臨路很吵","p":"$$","s":"https://www.dcard.tw/f/travel/p/255968985","y":2026,"g":"https://www.google.com/maps/search/L%27Osteria%20Pizza%20e%20Cucina%20Ubud/@-8.518138,115.26317,17z","lat":-8.518138,"lng":115.26317,"img":"l-osteria-pizza-e-cucina-ubud","pp":165000,"sh":"","ev":"Dcard 6 篇 + 2 位 YouTuber，Google 4.7 (2k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Nikuna Warung","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"安靜精緻的峇里家常菜，推豬肋排、沙嗲 lilit、Nasi Raja；主餐 6–8 萬，只能停機車","p":"$","s":"https://wanderlog.com/place/details/11981489/nikuna-warung","y":2026,"g":"https://www.google.com/maps/search/Nikuna%20Warung/@-8.509149,115.267049,17z","lat":-8.509149,"lng":115.267049,"img":"nikuna-warung","pp":120000,"sh":"","ev":"Threads 推薦 + Wanderlog 評論一致，Google 4.9 (1.4k)","k":"","rain":false,"h":"wanderlog.com"},{"n":"Nusantara by Locavore","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"Locavore團隊呈現印尼群島各地菜，曾入亞洲50最佳餐廳，需提前訂位","p":"$$$","s":"https://thehoneycombers.com/bali/best-restaurants-in-ubud/","y":2026,"g":"https://www.google.com/maps/search/Nusantara%20by%20Locavore/@-8.509813,115.262483,17z","lat":-8.509813,"lng":115.262483,"img":"nusantara-by-locavore","pp":250000,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Sun Sun Warung","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"米其林推薦的平價印尼家常菜，Nasi Campur、蜜汁髒鴨必點；週三公休、晚餐常排隊，午餐早到","p":"$","s":"https://www.dcard.tw/f/travel/p/255087890","y":2026,"g":"https://www.google.com/maps/search/Sun%20Sun%20Warung/@-8.509077,115.26677,17z","lat":-8.509077,"lng":115.26677,"img":"sun-sun-warung","pp":100000,"sh":"","ev":"Dcard 5 篇 + Threads + 小紅書 2 篇 + 2 位 YouTuber，Google 4.7 (5k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Waroeng Bernadette","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"Penestanan家庭食譜慢燉仁當聞名的印尼家常餐廳，主菜IDR 59k起","p":"$","s":"https://thehoneycombers.com/bali/best-restaurants-in-ubud/","y":2026,"g":"https://www.google.com/maps/search/Waroeng%20Bernadette/@-8.506227,115.254021,17z","lat":-8.506227,"lng":115.254021,"img":"waroeng-bernadette","pp":150000,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Warung Pondok Madu","c":"餐廳","a":"Ubud","r":"Ubud 周邊","w":"BBQ 豬肋排軟嫩脫骨配自家 sambal，南瓜湯也推；飯點排隊，另加稅與服務費","p":"$","s":"https://ninetwotraveller.pixnet.net/blog/posts/16180989146","y":2025,"g":"https://www.google.com/maps/search/Warung%20Pondok%20Madu/@-8.516502,115.266047,17z","lat":-8.516502,"lng":115.266047,"img":"warung-pondok-madu","pp":120000,"sh":"","ev":"痞客邦實測 + Wanderlog 多則評論，Google 4.6 (4.4k)","k":"","rain":false,"h":"ninetwotraveller.pixnet.net"},{"n":"Ox Noodle Bar","c":"餐廳","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"烏魯瓦圖少見合亞洲胃的湯麵店，兩位小紅書作者都列為全程最好吃；人均約 9 萬，行前確認評價","p":"$","s":"https://www.xiaohongshu.com/explore/68daa352000000001101e67c","y":2025,"g":"https://www.google.com/maps/search/Ox%20Noodle%20Bar/@-8.817119,115.157516,17z","lat":-8.817119,"lng":115.157516,"img":"ox-noodle-bar","pp":90000,"sh":"","ev":"小紅書 2 篇不同作者；Google 評分未驗證","k":"","rain":false,"h":"xiaohongshu.com"},{"n":"FINNS Beach Club","c":"酒吧","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"倉古最嗨海灘俱樂部，三座泳池11個吧台每日DJ，免入場費但限成人","p":"$$","s":"https://thehoneycombers.com/bali/best-beach-clubs-in-bali/","y":2026,"g":"https://www.google.com/maps/search/FINNS%20Beach%20Club/@-8.666765,115.139398,17z","lat":-8.666765,"lng":115.139398,"img":"finns-beach-club","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"La Brisa Bali","c":"酒吧","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"Echo Beach波希米亞漂流木風夕陽海灘俱樂部，西班牙小食，免入場費，週日有市集","p":"$$","s":"https://thehoneycombers.com/bali/best-beach-clubs-in-bali/","y":2026,"g":"https://www.google.com/maps/search/La%20Brisa%20Bali/@-8.65458,115.124811,17z","lat":-8.65458,"lng":115.124811,"img":"la-brisa-bali","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"The Lawn Canggu","c":"酒吧","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"Batu Bolong 海灘盡頭草地酒吧，豆袋低消約 30 萬可抵餐飲，披薩不錯；看日落要提早卡位","p":"$$","s":"https://vocus.cc/article/64785ee1fd8978000187e1e6","y":2025,"g":"https://www.google.com/maps/search/The%20Lawn%20Canggu/@-8.658524,115.129617,17z","lat":-8.658524,"lng":115.129617,"img":"the-lawn-canggu","pp":0,"sh":"","ev":"方格子 5★ + Threads + 小紅書，Google 4.4 (4.5k)","k":"","rain":false,"h":"vocus.cc"},{"n":"Rock Bar Bali","c":"酒吧","a":"Jimbaran","r":"Uluwatu · Jimbaran · Nusa Dua","w":"AYANA懸崖上搭斜軌纜車抵達的夕陽酒吧，海景一流，務必提前訂位","p":"$$$","s":"https://thehoneycombers.com/bali/best-bars-in-bali","y":2026,"g":"https://www.google.com/maps/search/Rock%20Bar%20Bali/@-8.784446,115.138182,17z","lat":-8.784446,"lng":115.138182,"img":"rock-bar-bali","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Azul Beach Club","c":"酒吧","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"Legian海灘三層竹構海灘俱樂部，有峇里首間Tiki Bar，池畔IDR 150k起","p":"$$","s":"https://thehoneycombers.com/bali/best-beach-clubs-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Azul%20Beach%20Club/@-8.707209,115.166512,17z","lat":-8.707209,"lng":115.166512,"img":"azul-beach-club","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Double Six Rooftop Sunset Bar","c":"酒吧","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"雙六海灘屋頂看日落，餐點意外好吃；兩人餐點＋3 杯調酒約 IDR 1.05M，偏貴","p":"$$$","s":"https://www.dcard.tw/f/travel/p/262334950","y":2026,"g":"https://www.google.com/maps/search/Double%20Six%20Rooftop%20Sunset%20Bar/@-8.696291,115.161387,17z","lat":-8.696291,"lng":115.161387,"img":"double-six-rooftop-sunset-bar","pp":0,"sh":"","ev":"Dcard 2 篇，Google 4.4 (2k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"La Favela","c":"酒吧","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"叢林廢墟風餐酒館入夜變夜店，男生可能收 20 萬低消；人多混亂，想安靜喝酒不適合","p":"$$","s":"https://www.dcard.tw/f/travel/p/246516242","y":2026,"g":"https://www.google.com/maps/search/La%20Favela/@-8.683894,115.162865,17z","lat":-8.683894,"lng":115.162865,"img":"la-favela","pp":0,"sh":"","ev":"Dcard 2 篇 + 小紅書 2 篇 + YouTuber，Google 4.3–4.4 (20k)，臨界","k":"","rain":false,"h":"dcard.tw"},{"n":"Potato Head Beach Club","c":"酒吧","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"零廢棄設計的指標海灘俱樂部，夕陽時段低消IDR 250k，Akademi Bar調酒出名","p":"$$","s":"https://thehoneycombers.com/bali/best-beach-clubs-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Potato%20Head%20Beach%20Club/@-8.679407,115.149959,17z","lat":-8.679407,"lng":115.149959,"img":"potato-head-beach-club","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Donna Ubud","c":"酒吧","a":"Ubud","r":"Ubud 周邊","w":"Monkey Forest路南美風多吧台場地，實驗調酒、戶外跳舞與週五屋頂派對","p":"$$","s":"https://whatsnewindonesia.com/bali/ultimate-guide/food-and-drink-nightlife/best-cocktail-bars-ubud-bali","y":2026,"g":"https://www.google.com/maps/search/Donna%20Ubud/@-8.513092,115.260632,17z","lat":-8.513092,"lng":115.260632,"img":"donna-ubud","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"whatsnewindonesia.com"},{"n":"The Lair","c":"酒吧","a":"Ubud","r":"Ubud 周邊","w":"掀布簾下樓的地窖酒吧，酒單像撲克牌一張一杯，調酒約 12–15 萬；座位少燈光暗","p":"$$","s":"https://vocus.cc/article/647951b0fd8978000192ff3d","y":2024,"g":"https://www.google.com/maps/search/The%20Lair/@-8.504993,115.254423,17z","lat":-8.504993,"lng":115.254423,"img":"the-lair","pp":0,"sh":"","ev":"方格子 2 篇詳細評比，Google 4.8 (406)","k":"","rain":false,"h":"vocus.cc"},{"n":"The Night Rooster","c":"酒吧","a":"Ubud","r":"Ubud 周邊","w":"Locavore團隊的得獎speakeasy，以印尼民間傳說與在地採集食材調酒","p":"$$","s":"https://thehoneycombers.com/bali/best-bars-in-bali","y":2026,"g":"https://www.google.com/maps/search/The%20Night%20Rooster/@-8.510354,115.26393,17z","lat":-8.510354,"lng":115.26393,"img":"the-night-rooster","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Whisper Cove","c":"酒吧","a":"Ubud","r":"Ubud 周邊","w":"藏在Maluku餐廳二樓的隱密酒吧，創意調酒配印尼風下酒菜","p":"$$","s":"https://thehoneycombers.com/bali/best-bars-in-bali","y":2026,"g":"https://www.google.com/maps/search/Whisper%20Cove/@-8.512351,115.260803,17z","lat":-8.512351,"lng":115.260803,"img":"whisper-cove","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Alma Tapas Bar","c":"酒吧","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Bingin 地中海 tapas 配大酒單，適合夜生活前暖場；份量小，人均約 25 萬","p":"$$","s":"https://littlebingin.com/guides/best-bars-uluwatu/","y":2025,"g":"https://www.google.com/maps/search/Alma%20Tapas%20Bar/@-8.812449,115.113047,17z","lat":-8.812449,"lng":115.113047,"img":"alma-tapas-bar","pp":0,"sh":"","ev":"Little Bingin + Onaya 兩方推薦，Google 4.9 (704)","k":"","rain":false,"h":"littlebingin.com"},{"n":"Jack Bar","c":"酒吧","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Ungasan 以峇里米酒 arak 為主的創意調酒吧，當地人多、價格親民；位置偏需叫車","p":"$","s":"https://littlebingin.com/guides/best-bars-uluwatu/","y":2025,"g":"https://www.google.com/maps/search/Jack%20Bar/@-8.828065,115.142169,17z","lat":-8.828065,"lng":115.142169,"img":"jack-bar","pp":0,"sh":"","ev":"Little Bingin + dropt.beer 兩篇獨立指南，Google 4.9 (255)","k":"","rain":false,"h":"littlebingin.com"},{"n":"OneEighty Bali","c":"酒吧","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"The Edge 懸崖上162米高玻璃底無邊際泳池酒廊，四小時日票IDR 700k起","p":"$$$","s":"https://thehoneycombers.com/bali/best-pool-day-clubs-in-bali","y":2026,"g":"https://www.google.com/maps/search/OneEighty%20Bali/@-8.846149,115.125405,17z","lat":-8.846149,"lng":115.125405,"img":"oneeighty-bali","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Single Fin Bali","c":"酒吧","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"烏魯瓦圖懸崖上的經典衝浪酒吧，看浪點與夕陽，週日派對人氣最旺","p":"$$","s":"https://thehoneycombers.com/bali/best-beach-clubs-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Single%20Fin%20Bali/@-8.815008,115.088921,17z","lat":-8.815008,"lng":115.088921,"img":"single-fin-bali","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Sundays Beach Club","c":"酒吧","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"位於沙灘上的海灘俱樂部，可浮潛划艇與夜間營火，入場IDR 800k含餐飲額度","p":"$$$","s":"https://thehoneycombers.com/bali/best-beach-clubs-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Sundays%20Beach%20Club/@-8.847465,115.151523,17z","lat":-8.847465,"lng":115.151523,"img":"sundays-beach-club","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Taboo Bali","c":"酒吧","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"烏魯瓦圖夜店兼餐廳，Afro house 之夜最熱；週末有入場費、需穿鞋","p":"$$","s":"https://www.youtube.com/watch?v=1LpqcgplzhU","y":2026,"g":"https://www.google.com/maps/search/Taboo%20Bali/@-8.81649,115.095563,17z","lat":-8.81649,"lng":115.095563,"img":"taboo-bali","pp":0,"sh":"","ev":"YouTuber Essi Rose + Trip.com 榜，Google 4.4 (1k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Klimb Boulder Gym","c":"抱石場","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"Canggu小而精的純抱石館，有耐力牆與噴牆，Monk姊妹館，IG @klimb.bali","p":"","s":"https://thedihedral.com/2025/08/02/klimg-bali-canggu","y":2025,"g":"https://www.google.com/maps/search/Klimb%20Boulder%20Gym/@-8.629183,115.1514,17z","lat":-8.629183,"lng":115.1514,"img":"klimb-boulder-gym","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"thedihedral.com"},{"n":"Rock Island Climbing Gym","c":"抱石場","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"2025/9開幕、印尼最大室內岩館，兩層抱石加上方與先鋒繩索，位於Pererenan","p":"","s":"https://climbingbusinessjournal.com/new-climbing-gym-opens-in-sports-and-fitness-hub-of-bali/","y":2026,"g":"https://www.google.com/maps/search/Rock%20Island%20Climbing%20Gym/@-8.637134,115.138392,17z","lat":-8.637134,"lng":115.138392,"img":"rock-island-climbing-gym","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"climbingbusinessjournal.com"},{"n":"Clip 'n Climb Bali","c":"抱石場","a":"Sanur","r":"Denpasar · Sanur","w":"娛樂型攀岩館：25面自動確保牆加3m抱石，非正統抱石，9–21時","p":"","s":"https://balibuddies.com/scale-new-heights-at-clip-n-climb-bali/","y":2025,"g":"https://www.google.com/maps/search/Clip%20%27n%20Climb%20Bali/@-8.703992,115.251799,17z","lat":-8.703992,"lng":115.251799,"img":"clip-n-climb-bali","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"balibuddies.com"},{"n":"Toko Bloc Bouldering Gym","c":"抱石場","a":"Tabanan","r":"Canggu · Seminyak · Kuta","w":"2026新開純抱石館，Walltopia牆526㎡，位於Nyanyi海灘路、Canggu西邊","p":"","s":"https://www.eventbrite.com/e/reel-rock-20-film-screening-tickets-2001166928152","y":2026,"g":"https://www.google.com/maps/search/Toko%20Bloc%20Bouldering%20Gym/@-8.607788,115.112466,17z","lat":-8.607788,"lng":115.112466,"img":"toko-bloc-bouldering-gym","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"eventbrite.com"},{"n":"Monk Climbing Gym Ubud","c":"抱石場","a":"Ubud","r":"Ubud 周邊","w":"烏布唯一抱石館（Jl. Raya Andong 89），有冷氣，日票含鞋粉，入門課IDR 300k","p":"","s":"https://www.balidoneright.com/top-rock-climbing-spots-bali/","y":2025,"g":"https://www.google.com/maps/search/Monk%20Climbing%20Gym%20Ubud/@-8.50266,115.272157,17z","lat":-8.50266,"lng":115.272157,"img":"monk-climbing-gym-ubud","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"balidoneright.com"},{"n":"Penglipuran Village","c":"景點","a":"Bangli","r":"Ubud 周邊","w":"號稱最乾淨的傳統村落，門票 5 萬、可租峇里服飾拍照；8–10 點人少，離烏布 1.5 小時","p":"","s":"https://www.dcard.tw/f/travel/p/259511764","y":2026,"g":"https://www.google.com/maps/search/Penglipuran%20Village/@-8.422504,115.359753,17z","lat":-8.422504,"lng":115.359753,"img":"penglipuran-village","pp":0,"sh":"","ev":"Dcard 5 篇 + Fodor's 論壇，Google 4.8 (30k)","k":"","rain":false,"h":"dcard.tw"},{"n":"Tibumana Waterfall","c":"景點","a":"Bangli","r":"Ubud 周邊","w":"門票IDR 25k、步行10分鐘即到可游泳，2026評為CP值最高瀑布","p":"","s":"https://www.30sundays.club/blog/best-waterfalls-in-bali-ranked-by-beauty-crowds-and-effort","y":2026,"g":"https://www.google.com/maps/search/Tibumana%20Waterfall/@-8.506801,115.333065,17z","lat":-8.506801,"lng":115.333065,"img":"tibumana-waterfall","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"30sundays.club"},{"n":"Tukad Cepung Waterfall","c":"景點","a":"Bangli","r":"Ubud 周邊","w":"洞穴光束瀑布，門票約 3 萬，9–11 點晴天光束最美；濕滑要防滑鞋，午後排隊","p":"","s":"https://www.xiaohongshu.com/explore/698eff39000000000c037e33","y":2026,"g":"https://www.google.com/maps/search/Tukad%20Cepung%20Waterfall/@-8.441017,115.386808,17z","lat":-8.441017,"lng":115.386808,"img":"tukad-cepung-waterfall","pp":0,"sh":"","ev":"小紅書多篇，Google 4.6 (5k)","k":"","rain":false,"h":"xiaohongshu.com"},{"n":"Batu Bolong Beach","c":"景點","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"面西黑沙夕陽與初學衝浪，Batu Bolong酒吧多、隔壁Echo Beach較安靜","p":"","s":"https://www.theluxurysignature.com/?p=51855","y":2026,"g":"https://www.google.com/maps/search/Batu%20Bolong%20Beach/@-8.659527,115.130144,17z","lat":-8.659527,"lng":115.130144,"img":"batu-bolong-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theluxurysignature.com"},{"n":"Lahangan Sweet","c":"景點","a":"East Bali","r":"更遠","w":"阿貢火山360度全景平台，人少，是天堂之門Lempuyang的最佳替代","p":"","s":"https://baliuntold.com/visit/places-to-avoid/","y":2026,"g":"https://www.google.com/maps/search/Lahangan%20Sweet/@-8.371949,115.637077,17z","lat":-8.371949,"lng":115.637077,"img":"lahangan-sweet","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"baliuntold.com"},{"n":"Garuda Wisnu Kencana Cultural Park","c":"景點","a":"Jimbaran","r":"Uluwatu · Jimbaran · Nusa Dua","w":"巨型神鷹雕像文化公園，園區大又曬；建議傍晚去，可付費請園內攝影師","p":"","s":"https://www.dcard.tw/f/travel/p/259636758","y":2025,"g":"https://www.google.com/maps/search/Garuda%20Wisnu%20Kencana%20Cultural%20Park/@-8.810194,115.168061,17z","lat":-8.810194,"lng":115.168061,"img":"garuda-wisnu-kencana-cultural-park","pp":0,"sh":"","ev":"Dcard 3 篇獨立，Google 4.6 (40k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Mount Batur","c":"景點","a":"Kintamani","r":"更遠","w":"日出健行：凌晨2點接送、約US$29–35含早餐，山頂人多，選小團或私人團","p":"","s":"https://theabroadguide.com/?p=3176686","y":2026,"g":"https://www.google.com/maps/search/Mount%20Batur/@-8.239415,115.37796,17z","lat":-8.239415,"lng":115.37796,"img":"mount-batur","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theabroadguide.com"},{"n":"Kuta Beach","c":"景點","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"住庫塔當晚可看夕陽、初學衝浪，小販推銷積極，先問價再坐","p":"","s":"https://30sundays.club/blog/the-honest-review-of-top-activities-in-kuta-bali","y":2026,"g":"https://www.google.com/maps/search/Kuta%20Beach/@-8.718214,115.168757,17z","lat":-8.718214,"lng":115.168757,"img":"kuta-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"30sundays.club"},{"n":"Banyumala Twin Waterfalls","c":"景點","a":"North Bali","r":"更遠","w":"門票IDR 50k、人少的雙瀑清池可游泳，宜與Munduk同遊","p":"","s":"https://www.30sundays.club/blog/best-waterfalls-in-bali-ranked-by-beauty-crowds-and-effort","y":2026,"g":"https://www.google.com/maps/search/Banyumala%20Twin%20Waterfalls/@-8.217187,115.101681,17z","lat":-8.217187,"lng":115.101681,"img":"banyumala-twin-waterfalls","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"30sundays.club"},{"n":"Gunung Payung Beach","c":"景點","a":"Nusa Dua","r":"Uluwatu · Jimbaran · Nusa Dua","w":"烏魯瓦圖東側秘境白沙灘，水藍人少；要走一段樓梯下去，自備水與遮陽","p":"","s":"https://www.dcard.tw/f/travel/p/260800151","y":2026,"g":"https://www.google.com/maps/search/Gunung%20Payung%20Beach/@-8.840777,115.199836,17z","lat":-8.840777,"lng":115.199836,"img":"gunung-payung-beach","pp":0,"sh":"","ev":"Dcard 2 篇獨立 2026，Google 4.6 (2k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Broken Beach","c":"景點","a":"Nusa Penida","r":"更遠","w":"免費只需停車費，拱門只能俯瞰；旁邊Angel's Billabong曾有溺水勿下水","p":"","s":"https://themanduls.com/things-to-do-in-nusa-penida/","y":2026,"g":"https://www.google.com/maps/search/Broken%20Beach/@-8.733129,115.4508,17z","lat":-8.733129,"lng":115.4508,"img":"broken-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"themanduls.com"},{"n":"Diamond Beach","c":"景點","a":"Nusa Penida","r":"更遠","w":"門票IDR 45k含隔壁Atuh Beach，日出去最少人，漲潮沙灘會消失要查潮汐","p":"","s":"https://themanduls.com/things-to-do-in-nusa-penida/","y":2026,"g":"https://www.google.com/maps/search/Diamond%20Beach/@-8.776136,115.618636,17z","lat":-8.776136,"lng":115.618636,"img":"diamond-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"themanduls.com"},{"n":"Kelingking Beach","c":"景點","a":"Nusa Penida","r":"更遠","w":"恐龍灣，免費、停車IDR 5k，7點前到避人潮，下坡陡滑且禁止游泳","p":"","s":"https://themanduls.com/things-to-do-in-nusa-penida/","y":2026,"g":"https://www.google.com/maps/search/Kelingking%20Beach/@-8.751263,115.473131,17z","lat":-8.751263,"lng":115.473131,"img":"kelingking-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"themanduls.com"},{"n":"Double Six Beach","c":"景點","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"水明漾看夕陽最方便的海灘，沙灘懶骨頭酒吧一瓶啤酒即可坐到天黑","p":"","s":"https://www.youtube.com/watch?v=kCh3Sf-v4tE","y":2026,"g":"https://www.google.com/maps/search/Double%20Six%20Beach/@-8.697507,115.161033,17z","lat":-8.697507,"lng":115.161033,"img":"double-six-beach","pp":0,"sh":"","ev":"YouTuber + 多篇中文攻略，Google 4.5 (20k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Bali Bird Park","c":"景點","a":"Sukawati","r":"Ubud 周邊","w":"開放式鳥園可與犀鳥、鸚鵡零距離，愛鳥人大推；門票約 NT$750 偏貴，部分展館有頂","p":"","s":"https://www.dcard.tw/f/travel/p/261294212","y":2026,"g":"https://www.google.com/maps/search/Bali%20Bird%20Park/@-8.599643,115.252057,17z","lat":-8.599643,"lng":115.252057,"img":"bali-bird-park","pp":0,"sh":"","ev":"Dcard 2 篇獨立 2026，Google 4.6 (10k+)","k":"","rain":true,"h":"dcard.tw"},{"n":"Tegenungan Waterfall","c":"景點","a":"Sukawati","r":"Ubud 周邊","w":"離烏布最近的瀑布，有階梯可到瀑底下水；雨季水量大，出口烤玉米阿姨必吃","p":"","s":"https://www.dcard.tw/f/travel/p/256416953","y":2025,"g":"https://www.google.com/maps/search/Tegenungan%20Waterfall/@-8.575362,115.28896,17z","lat":-8.575362,"lng":115.28896,"img":"tegenungan-waterfall","pp":0,"sh":"","ev":"Dcard 5 篇獨立，Google 4.4 (20k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Jatiluwih Rice Terraces","c":"景點","a":"Tabanan","r":"更遠","w":"UNESCO真實農田梯田、無鞦韆攤，離烏布1小時以上，6點出發避熱","p":"","s":"https://girlonazebra.com/what-to-do-in-ubud/","y":2025,"g":"https://www.google.com/maps/search/Jatiluwih%20Rice%20Terraces/@-8.370197,115.131196,17z","lat":-8.370197,"lng":115.131196,"img":"jatiluwih-rice-terraces","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"girlonazebra.com"},{"n":"Tanah Lot","c":"景點","a":"Tabanan","r":"Canggu · Seminyak · Kuta","w":"海神廟門票IDR 75k，夕陽人潮極多、攤販多，想清靜改早上7–9點","p":"","s":"https://30sundays.club/blog/tanah-lot-temple","y":2026,"g":"https://www.google.com/maps/search/Tanah%20Lot/@-8.621229,115.086885,17z","lat":-8.621229,"lng":115.086885,"img":"tanah-lot","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"30sundays.club"},{"n":"Tirta Empul Temple","c":"景點","a":"Tampaksiring","r":"Ubud 周邊","w":"聖泉寺，可參加淨身儀式，門票IDR 75k現金，7–8:30到最清靜，下午大排長龍","p":"","s":"https://baliuntold.com/things-to-do/temples/pura-tirta-empul/","y":2025,"g":"https://www.google.com/maps/search/Tirta%20Empul%20Temple/@-8.414934,115.316026,17z","lat":-8.414934,"lng":115.316026,"img":"tirta-empul-temple","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"baliuntold.com"},{"n":"Alas Harum Bali","c":"景點","a":"Tegallalang","r":"Ubud 周邊","w":"梯田鞦韆＋景觀園區，入園 IDR 50k、鞦韆另付 200k 起；商業化但好拍","p":"","s":"https://www.youtube.com/watch?v=VmZCo7-7HMI","y":2025,"g":"https://www.google.com/maps/search/Alas%20Harum%20Bali/@-8.4398,115.280727,17z","lat":-8.4398,"lng":115.280727,"img":"alas-harum-bali","pp":0,"sh":"","ev":"YouTuber + 部落格 2 篇，Google 4.6 (25k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Tegallalang Rice Terrace","c":"景點","a":"Tegallalang","r":"Ubud 周邊","w":"門票IDR 50k，鞦韆拍照攤林立已偏觀光化，要去請清晨7點前","p":"","s":"https://girlonazebra.com/what-to-do-in-ubud/","y":2025,"g":"https://www.google.com/maps/search/Tegallalang%20Rice%20Terrace/@-8.431711,115.279303,17z","lat":-8.431711,"lng":115.279303,"img":"tegallalang-rice-terrace","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"girlonazebra.com"},{"n":"Ayung River","c":"景點","a":"Ubud","r":"Ubud 周邊","w":"泛舟約US$30含午餐，2小時初學友善急流，大雨會取消，1月雨季水量足","p":"","s":"https://theabroadguide.com/?p=3178667","y":2026,"g":"https://www.google.com/maps/search/Ayung%20River/@-8.470696,115.241129,17z","lat":-8.470696,"lng":115.241129,"img":"ayung-river","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theabroadguide.com"},{"n":"Campuhan Ridge Walk","c":"景點","a":"Ubud","r":"Ubud 周邊","w":"免費山脊步道，日出時去幾乎沒人也最涼，缺遮蔭要帶水","p":"","s":"https://girlonazebra.com/what-to-do-in-ubud/","y":2025,"g":"https://www.google.com/maps/search/Campuhan%20Ridge%20Walk/@-8.495021,115.255837,17z","lat":-8.495021,"lng":115.255837,"img":"campuhan-ridge-walk","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"girlonazebra.com"},{"n":"Kanto Lampo Waterfall","c":"景點","a":"Ubud","r":"Ubud 周邊","w":"岩壁層疊式瀑布可站在水中拍照，門票 IDR 25k；9:00 前到免排隊，之後可排 40 分到 2 小時","p":"","s":"https://www.dcard.tw/f/travel/p/255968985","y":2026,"g":"https://www.google.com/maps/search/Kanto%20Lampo%20Waterfall/@-8.532507,115.332861,17z","lat":-8.532507,"lng":115.332861,"img":"kanto-lampo-waterfall","pp":0,"sh":"","ev":"Dcard 5 篇 + YouTuber，Google 4.5 (12k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Pura Taman Saraswati","c":"景點","a":"Ubud","r":"Ubud 周邊","w":"烏布水皇宮蓮花池，市中心步行可達；入內需披沙龍，晚上有舞蹈表演","p":"","s":"https://www.youtube.com/watch?v=vInAu5O8esU","y":2025,"g":"https://www.google.com/maps/search/Pura%20Taman%20Saraswati/@-8.506084,115.261085,17z","lat":-8.506084,"lng":115.261085,"img":"pura-taman-saraswati","pp":0,"sh":"","ev":"2 位 YouTuber + 部落格，Google 4.5 (12k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Sacred Monkey Forest Sanctuary","c":"景點","a":"Ubud","r":"Ubud 周邊","w":"市中心叢林寺廟，平日IDR 80k假日100k，猴子會搶物品，收好眼鏡","p":"","s":"https://www.baliholidaysecrets.com/things-to-do-in-ubud/","y":2026,"g":"https://www.google.com/maps/search/Sacred%20Monkey%20Forest%20Sanctuary/@-8.518735,115.25832,17z","lat":-8.518735,"lng":115.25832,"img":"sacred-monkey-forest-sanctuary","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"baliholidaysecrets.com"},{"n":"Bingin Beach","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"懸崖階梯下的衝浪夕陽海灘，人較少，有海邊小店，近期有施工碎石","p":"","s":"https://theworldtravelguy.com/uluwatu-bali-top-things-to-do-in-uluwatu/","y":2025,"g":"https://www.google.com/maps/search/Bingin%20Beach/@-8.80567,115.113067,17z","lat":-8.80567,"lng":115.113067,"img":"bingin-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theworldtravelguy.com"},{"n":"Karang Boma Cliff","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"烏魯瓦圖寺旁懸崖觀景點，夕陽時人少，邊緣無護欄小心","p":"","s":"https://theworldtravelguy.com/uluwatu-bali-top-things-to-do-in-uluwatu/","y":2025,"g":"https://www.google.com/maps/search/Karang%20Boma%20Cliff/@-8.836756,115.08841,17z","lat":-8.836756,"lng":115.08841,"img":"karang-boma-cliff","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theworldtravelguy.com"},{"n":"Melasti Beach","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"懸崖公路直下的白沙灘，門票 1–1.5 萬，傍晚有 Kecak；偏商業化，叫車下車另收費","p":"","s":"https://lokasibali.com/lokasi/melasti-beach","y":2026,"g":"https://www.google.com/maps/search/Melasti%20Beach/@-8.848294,115.16317,17z","lat":-8.848294,"lng":115.16317,"img":"melasti-beach","pp":0,"sh":"","ev":"評論彙整，Google 4.6 (4k)","k":"","rain":false,"h":"lokasibali.com"},{"n":"Nyang Nyang Beach","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"1.5km白沙與沉船彩繪，下坡回程很累，查潮汐，漲潮較適合游泳","p":"","s":"https://theworldtravelguy.com/uluwatu-bali-top-things-to-do-in-uluwatu/","y":2025,"g":"https://www.google.com/maps/search/Nyang%20Nyang%20Beach/@-8.839751,115.094327,17z","lat":-8.839751,"lng":115.094327,"img":"nyang-nyang-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theworldtravelguy.com"},{"n":"Padang Padang Beach","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"穿過岩縫下到的小海灣，門票 IDR 15k；猴子多、午後人多建議早上","p":"","s":"https://www.youtube.com/watch?v=VTPURKLtUaA","y":2025,"g":"https://www.google.com/maps/search/Padang%20Padang%20Beach/@-8.811138,115.103766,17z","lat":-8.811138,"lng":115.103766,"img":"padang-padang-beach","pp":0,"sh":"","ev":"2 位 YouTuber + vocus，Google 4.5 (25k+)","k":"","rain":false,"h":"youtube.com"},{"n":"Suluban Beach","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Blue Point 洞穴海灘，退潮才能走進岩洞與沙灘；上方懸崖餐廳看衝浪夕陽，階梯多","p":"","s":"https://www.dcard.tw/f/travel/p/261294212","y":2026,"g":"https://www.google.com/maps/search/Suluban%20Beach/@-8.816017,115.088288,17z","lat":-8.816017,"lng":115.088288,"img":"suluban-beach","pp":0,"sh":"","ev":"Dcard 4 篇 + 3 位 YouTuber，Google 4.6 (5k+)","k":"","rain":false,"h":"dcard.tw"},{"n":"Thomas Beach","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"長白沙少人，Padang Padang擁擠昂貴的最佳替代，需走階梯","p":"","s":"https://theworldtravelguy.com/uluwatu-bali-top-things-to-do-in-uluwatu/","y":2025,"g":"https://www.google.com/maps/search/Thomas%20Beach/@-8.812332,115.098192,17z","lat":-8.812332,"lng":115.098192,"img":"thomas-beach","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"theworldtravelguy.com"},{"n":"Uluwatu Temple","c":"景點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"門票IDR 50k加Kecak舞票150–200k，18:00場最熱門，17:00前到佔位，防猴","p":"","s":"https://kura2bus.com/blog/uluwatu-kecak-dance-ticket-price/","y":2025,"g":"https://www.google.com/maps/search/Uluwatu%20Temple/@-8.829369,115.084343,17z","lat":-8.829369,"lng":115.084343,"img":"uluwatu-temple","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"kura2bus.com"},{"n":"Trans Studio Bali","c":"體驗","a":"Denpasar","r":"Denpasar · Sanur","w":"登巴薩室內主題樂園，16 項設施，成人約 50 萬；週間只開到 18:00","p":"$$$","s":"https://www.transstudiobali.com/","y":2026,"g":"https://www.google.com/maps/search/Trans%20Studio%20Bali/@-8.701992,115.183057,17z","lat":-8.701992,"lng":115.183057,"img":"trans-studio-bali","pp":500000,"sh":"","ev":"官網營業時間；baliuntold 2025 票價","k":"","rain":true,"h":"transstudiobali.com"},{"n":"Cinépolis Sidewalk Jimbaran","c":"體驗","a":"Jimbaran","r":"Uluwatu · Jimbaran · Nusa Dua","w":"離烏魯瓦圖最近的電影院，票 4–6.5 萬；Jimbaran 海鮮晚餐後看片","p":"$","s":"https://balibuddies.com/cinemas-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Cin%C3%A9polis%20Sidewalk%20Jimbaran/@-8.796453,115.161375,17z","lat":-8.796453,"lng":115.161375,"img":"cin-polis-sidewalk-jimbaran","pp":50000,"sh":"","ev":"balibuddies 2026/03 價目","k":"","rain":true,"h":"balibuddies.com"},{"n":"SAKA Museum","c":"體驗","a":"Jimbaran","r":"Uluwatu · Jimbaran · Nusa Dua","w":"2024 新開的 Nyepi 主題博物館，Ogoh-ogoh 巨偶震撼，門票 30 萬，10:00–18:00","p":"$$$","s":"https://8islandadventure.com/en/blog/bali-museum-entrance-fees","y":2026,"g":"https://www.google.com/maps/search/SAKA%20Museum/@-8.789752,115.143287,17z","lat":-8.789752,"lng":115.143287,"img":"saka-museum","pp":300000,"sh":"","ev":"官方 FAQ 票價；baliuntold 2025 雨天推薦","k":"","rain":true,"h":"8islandadventure.com"},{"n":"Beachwalk XXI Cineplex Bali","c":"體驗","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"庫塔海濱商場內電影院，Premiere 躺椅票 75k–150k，第一晚下雨的首選","p":"$","s":"https://balibuddies.com/cinemas-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Beachwalk%20XXI%20Cineplex%20Bali/@-8.716272,115.17019,17z","lat":-8.716272,"lng":115.17019,"img":"beachwalk-xxi-cineplex-bali","pp":45000,"sh":"","ev":"Google 4.5 (4k)；balibuddies 2026 價目","k":"","rain":true,"h":"balibuddies.com"},{"n":"Pandora Experience Bali","c":"體驗","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"Legian 真人密室逃脫，每場約 2 小時，場次少需先 WhatsApp 預約；價格未核實","p":"$$","s":"https://baliuntold.com/things-to-do/rainy-day/","y":2025,"g":"https://www.google.com/maps/search/Pandora%20Experience%20Bali/@-8.706545,115.178058,17z","lat":-8.706545,"lng":115.178058,"img":"pandora-experience-bali","pp":250000,"sh":"","ev":"baliuntold、Finns 雨天清單皆列","k":"","rain":true,"h":"baliuntold.com"},{"n":"Setia Darma House of Mask and Puppets","c":"體驗","a":"Mas","r":"Ubud 周邊","w":"Mas 村面具與偶戲博物館，隨喜入場 9:00–16:00，藏品上千；行前確認開放","p":"$","s":"https://finnsbeachclub.com/guides/top-indoor-activities-in-bali/","y":2026,"g":"https://www.google.com/maps/search/Setia%20Darma%20House%20of%20Mask%20and%20Puppets/@-8.533706,115.279471,17z","lat":-8.533706,"lng":115.279471,"img":"setia-darma-house-of-mask-and-puppets","pp":50000,"sh":"","ev":"Finns 室內清單 #4；烏布南邊 10 分","k":"","rain":true,"h":"finnsbeachclub.com"},{"n":"Jungle Gold Chocolate Factory","c":"體驗","a":"Mengwi","r":"更遠","w":"原 Pod Chocolate，Mengwi 工廠導覽 30 分 10 萬＋DIY 巧克力 10 萬；需預約，烏布到 Canggu 順路","p":"$","s":"https://junglegoldbali.com/visit/","y":2026,"g":"https://www.google.com/maps/search/Jungle%20Gold%20Chocolate%20Factory/@-8.493247,115.184463,17z","lat":-8.493247,"lng":115.184463,"img":"jungle-gold-chocolate-factory","pp":200000,"sh":"","ev":"官網價目","k":"","rain":true,"h":"junglegoldbali.com"},{"n":"Museum Pasifika","c":"體驗","a":"Nusa Dua","r":"Uluwatu · Jimbaran · Nusa Dua","w":"努沙杜瓦亞太藝術館，600 多件作品，門票 7–10 萬，10:00–18:00；無冷氣悶熱","p":"$","s":"https://www.museum-pasifika.com/","y":2026,"g":"https://www.google.com/maps/search/Museum%20Pasifika/@-8.800086,115.230703,17z","lat":-8.800086,"lng":115.230703,"img":"museum-pasifika","pp":100000,"sh":"","ev":"官網；Traveloka 9.6/10；Honeycombers","k":"","rain":true,"h":"museum-pasifika.com"},{"n":"Agung Rai Museum of Art","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"烏布最大藝術博物館門票 15 萬，週一三 Kecak、週四 Legong 19:00 開演 15 萬；舞台露天","p":"$","s":"https://www.armabali.com/performance/","y":2026,"g":"https://www.google.com/maps/search/Agung%20Rai%20Museum%20of%20Art/@-8.522807,115.263862,17z","lat":-8.522807,"lng":115.263862,"img":"agung-rai-museum-of-art","pp":150000,"sh":"","ev":"Tripadvisor 4.4 (1.3k)；官網節目表","k":"","rain":true,"h":"armabali.com"},{"n":"Casa Luna Cooking School","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"1992 年老牌烹飪學校，週一三 9:30–13:00 約 3.5 小時，約 60–72 萬；需預約","p":"$$$","s":"https://www.cookly.me/do/284-discover-secrets-balinese-food/in/ubud","y":2025,"g":"https://www.google.com/maps/search/Casa%20Luna%20Cooking%20School/@-8.50735,115.258932,17z","lat":-8.50735,"lng":115.258932,"img":"casa-luna-cooking-school","pp":650000,"sh":"","ev":"Cookly 4.88 (33)；在 Honeymoon Guesthouse","k":"","rain":true,"h":"cookly.me"},{"n":"Karsa Spa","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"Campuhan 稜線旁高 CP 值 SPA，峇里式按摩 60 分 24 萬＋15%；務必提前預約","p":"$","s":"https://karsaspa.com/","y":2026,"g":"https://www.google.com/maps/search/Karsa%20Spa/@-8.489582,115.258397,17z","lat":-8.489582,"lng":115.258397,"img":"karsa-spa","pp":276000,"sh":"","ev":"官方價目；Honeycombers 2026 烏布 15 家最便宜；Tripadvisor 4.8","k":"","rain":true,"h":"karsaspa.com"},{"n":"Lobong Culinary Experience","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"烏布家庭院落烹飪課，早班含傳統市場，約 45–52 萬；WhatsApp 預約，最多 12 人","p":"$$","s":"https://www.lobongculinary.com/","y":2026,"g":"https://www.google.com/maps/search/Lobong%20Culinary%20Experience/@-8.481053,115.247052,17z","lat":-8.481053,"lng":115.247052,"img":"lobong-culinary-experience","pp":480000,"sh":"","ev":"官網；thetenlist 價格","k":"","rain":true,"h":"lobongculinary.com"},{"n":"Museum Puri Lukisan","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"烏布中心最老美術館，門票 9.5 萬，花園式展館 9:00–18:00；皇宮走路可到","p":"$","s":"https://heybali.info/ubud-indoor-adventure/","y":2025,"g":"https://www.google.com/maps/search/Museum%20Puri%20Lukisan/@-8.505242,115.2603,17z","lat":-8.505242,"lng":115.2603,"img":"museum-puri-lukisan","pp":95000,"sh":"","ev":"heybali 2025、thewonderspace 2025 雨天首選","k":"","rain":true,"h":"heybali.info"},{"n":"Neka Art Museum","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"Sanggingan 峇里繪畫史博物館，門票約 15 萬，9:00–17:00，約 1–2 小時","p":"$","s":"https://heybali.info/ubud-indoor-adventure/","y":2025,"g":"https://www.google.com/maps/search/Neka%20Art%20Museum/@-8.492541,115.254015,17z","lat":-8.492541,"lng":115.254015,"img":"neka-art-museum","pp":150000,"sh":"","ev":"heybali 2025、Finns 室內清單","k":"","rain":true,"h":"heybali.info"},{"n":"Paon Bali Cooking Class","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"Laplapan 村家庭烹飪課，早班含市場，約 35 萬含午餐；旺季需提早幾天訂","p":"$$","s":"https://thetenlist.com/ubud/cooking-class/paon-bali","y":2026,"g":"https://www.google.com/maps/search/Paon%20Bali%20Cooking%20Class/@-8.505247,115.278679,17z","lat":-8.505247,"lng":115.278679,"img":"paon-bali-cooking-class","pp":350000,"sh":"","ev":"價格 2026/10 核對；Tripadvisor 好評","k":"","rain":true,"h":"thetenlist.com"},{"n":"The Blanco Renaissance Museum","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"Campuhan 河谷畫家故居博物館，門票 10 萬，有迴廊遮雨，約 1 小時","p":"$","s":"https://heybali.info/ubud-indoor-adventure/","y":2025,"g":"https://www.google.com/maps/search/The%20Blanco%20Renaissance%20Museum/@-8.504866,115.254101,17z","lat":-8.504866,"lng":115.254101,"img":"the-blanco-renaissance-museum","pp":100000,"sh":"","ev":"heybali 2025；Tripadvisor 雨天清單","k":"","rain":true,"h":"heybali.info"},{"n":"Ubud Palace","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"每晚 19:30 雷貢舞，票 10 萬當天下午現場買，提早 30–45 分佔位；露天庭院備雨衣","p":"$","s":"https://www.baliholidaysecrets.com/ubud-palace/","y":2025,"g":"https://www.google.com/maps/search/Ubud%20Palace/@-8.506598,115.262588,17z","lat":-8.506598,"lng":115.262588,"img":"ubud-palace","pp":100000,"sh":"","ev":"門票與時間多方一致","k":"","rain":false,"h":"baliholidaysecrets.com"},{"n":"Ubud Traditional Spa","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"Kedewatan 平價 SPA，60 分按摩 26 萬起；兩人以上烏布區免費接送","p":"$","s":"https://thehoneycombers.com/bali/best-spas-in-ubud/","y":2026,"g":"https://www.google.com/maps/search/Ubud%20Traditional%20Spa/@-8.477358,115.253302,17z","lat":-8.477358,"lng":115.253302,"img":"ubud-traditional-spa","pp":260000,"sh":"","ev":"Honeycombers 平價首選","k":"","rain":true,"h":"thehoneycombers.com"},{"n":"Widya Batik Class","c":"體驗","a":"Ubud","r":"Ubud 周邊","w":"蠟染課 10:00–15:00 全日約 45 萬，含烏布免費接送；WhatsApp 預約","p":"$$","s":"https://wanderlog.com/place/details/5661882/widyas-batik-class","y":2026,"g":"https://www.google.com/maps/search/Widya%20Batik%20Class/@-8.482104,115.269125,17z","lat":-8.482104,"lng":115.269125,"img":"widya-batik-class","pp":450000,"sh":"","ev":"Google 5.0 (337)","k":"","rain":true,"h":"wanderlog.com"},{"n":"Svaha Spa Bingin","c":"體驗","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Bingin 平價連鎖 SPA，雨天活動榜首，15 分到 1 小時按摩約 15–35 萬；WhatsApp 訂","p":"$","s":"https://www.getyourguide.com/uluwatu-l105742/rainy-day-activities-tc269/","y":2026,"g":"https://www.google.com/maps/search/Svaha%20Spa%20Bingin/@-8.821933,115.11618,17z","lat":-8.821933,"lng":115.11618,"img":"svaha-spa-bingin","pp":250000,"sh":"","ev":"GetYourGuide 雨天榜最多評；價格未核實","k":"","rain":true,"h":"getyourguide.com"},{"n":"Uluwatu Silver Class","c":"體驗","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"Padang Padang 旁銀飾課，1–2 小時 62.5 萬含 6g 銀，可做男戒；需 WhatsApp 預約","p":"$$","s":"https://uluwatusilverclass.com/","y":2026,"g":"https://www.google.com/maps/search/Uluwatu%20Silver%20Class/@-8.817286,115.113777,17z","lat":-8.817286,"lng":115.113777,"img":"uluwatu-silver-class","pp":625000,"sh":"","ev":"Google 4.9 (343)；每日 09:00–16:00","k":"","rain":true,"h":"uluwatusilverclass.com"},{"n":"Living World Denpasar","c":"購物中心","a":"Denpasar","r":"Denpasar · Sanur","w":"全島最大商場，300多家店含H&M、Uniqlo，Cinema XXI與屋頂美食攤。","p":"","s":"https://www.baliholidaysecrets.com/living-world-denpasar/","y":2025,"g":"https://www.google.com/maps/search/Living%20World%20Denpasar/@-8.634388,115.232105,17z","lat":-8.634388,"lng":115.232105,"img":"living-world-denpasar","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"baliholidaysecrets.com"},{"n":"Trans Studio Mall Bali","c":"購物中心","a":"Denpasar","r":"Denpasar · Sanur","w":"國際與本地品牌、電影院，附設室內主題樂園與屋頂雲霄飛車。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/best-shopping-malls-bali","y":2025,"g":"https://www.google.com/maps/search/Trans%20Studio%20Mall%20Bali/@-8.701967,115.183185,17z","lat":-8.701967,"lng":115.183185,"img":"trans-studio-mall-bali","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"Beachwalk Shopping Center","c":"購物中心","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"庫塔海灘正對面，國際品牌、本地精品與可看夕陽的海景餐廳。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/best-shopping-malls-bali","y":2025,"g":"https://www.google.com/maps/search/Beachwalk%20Shopping%20Center/@-8.716449,115.16927,17z","lat":-8.716449,"lng":115.16927,"img":"beachwalk-shopping-center","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"Discovery Shopping Mall","c":"購物中心","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"庫塔最大、鄰海的購物中心，時尚、珠寶、衝浪店與電影院。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/best-shopping-malls-bali","y":2025,"g":"https://www.google.com/maps/search/Discovery%20Shopping%20Mall/@-8.728704,115.168654,17z","lat":-8.728704,"lng":115.168654,"img":"discovery-shopping-mall","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"Lippo Mall Kuta","c":"購物中心","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"離機場近的平價選擇，時尚品牌與本地加國際料理美食街。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/best-shopping-malls-bali","y":2025,"g":"https://www.google.com/maps/search/Lippo%20Mall%20Kuta/@-8.735344,115.166501,17z","lat":-8.735344,"lng":115.166501,"img":"lippo-mall-kuta","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"Mal Bali Galeria","c":"購物中心","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"機場旁Dewa Ruci路口，有量販超市、免稅店、電影院，適合最後採買。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/complete-bali-shopping-guide","y":2024,"g":"https://www.google.com/maps/search/Mal%20Bali%20Galeria/@-8.723462,115.184441,17z","lat":-8.723462,"lng":115.184441,"img":"mal-bali-galeria","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"Bali Collection","c":"購物中心","a":"Nusa Dua","r":"Uluwatu · Jimbaran · Nusa Dua","w":"努沙杜瓦開放式高檔購物中心，有SOGO、超市、手工藝與餐廳。","p":"","s":"https://30sundays.club/blog/shopping-in-bali","y":2026,"g":"https://www.google.com/maps/search/Bali%20Collection/@-8.802521,115.230171,17z","lat":-8.802521,"lng":115.230171,"img":"bali-collection","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"30sundays.club"},{"n":"Icon Bali","c":"購物中心","a":"Sanur","r":"Denpasar · Sanur","w":"2024年開幕海濱新商場，Uniqlo、M&S、峇里首座IMAX與Krisna Premium。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/best-shopping-malls-bali","y":2025,"g":"https://www.google.com/maps/search/Icon%20Bali/@-8.686754,115.263896,17z","lat":-8.686754,"lng":115.263896,"img":"icon-bali","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"Seminyak Village","c":"購物中心","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"水明漾精品小商場，設計師品牌、藝廊、精緻餐飲與屋頂夕陽。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/best-shopping-malls-bali","y":2025,"g":"https://www.google.com/maps/search/Seminyak%20Village/@-8.683248,115.156866,17z","lat":-8.683248,"lng":115.156866,"img":"seminyak-village","pp":0,"sh":"","ev":"","k":"","rain":true,"h":"whatsnewindonesia.com"},{"n":"La Brisa","c":"購物點","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"Echo Beach 海灘俱樂部，週日市集賣永續泳裝、亞麻、天然保養品。","p":"","s":"https://www.inivie.com/discover-bali/canggu-shopping","y":2026,"g":"https://www.google.com/maps/search/La%20Brisa/@-8.65458,115.124811,17z","lat":-8.65458,"lng":115.124811,"img":"la-brisa","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"inivie.com"},{"n":"Love Anchor","c":"購物點","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"Batu Bolong路波希米亞市集，泳裝、亞麻洋裝、銀飾與週末藤包古著。","p":"","s":"https://www.inivie.com/discover-bali/canggu-shopping","y":2026,"g":"https://www.google.com/maps/search/Love%20Anchor/@-8.651801,115.133789,17z","lat":-8.651801,"lng":115.133789,"img":"love-anchor","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"inivie.com"},{"n":"Onuka Chocolate","c":"購物點","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"蒼古手工巧克力小店，單顆與禮盒適合帶回台灣；店小、可內用","p":"$","s":"https://www.youtube.com/watch?v=VPcjg8ckiY4","y":2025,"g":"https://www.google.com/maps/search/Onuka%20Chocolate/@-8.660859,115.14686,17z","lat":-8.660859,"lng":115.14686,"img":"onuka-chocolate","pp":0,"sh":"","ev":"YouTuber 林宣，Google 4.8 (500+)；評論數較少","k":"","rain":true,"h":"youtube.com"},{"n":"Krisna Oleh-Oleh Bali","c":"購物點","a":"Denpasar","r":"Denpasar · Sanur","w":"不用殺價的伴手禮超市，峇里咖啡、牛奶派、織品與畫作。","p":"","s":"https://dijiwasanctuaries.com/magazine/best-10-bali-gift-shops-and-art-markets-in-2025-where-to-shop-for-souvenirs-crafts-and-culture","y":2025,"g":"https://www.google.com/maps/search/Krisna%20Oleh-Oleh%20Bali/@-8.65754,115.228621,17z","lat":-8.65754,"lng":115.228621,"img":"krisna-oleh-oleh-bali","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Pasar Badung","c":"購物點","a":"Denpasar","r":"Denpasar · Sanur","w":"登巴薩最大傳統市場，對岸 Kumbasari 藝品市場，香料、蠟染、竹籃。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/complete-bali-shopping-guide","y":2024,"g":"https://www.google.com/maps/search/Pasar%20Badung/@-8.656545,115.212433,17z","lat":-8.656545,"lng":115.212433,"img":"pasar-badung","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"whatsnewindonesia.com"},{"n":"Joger","c":"購物點","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"印尼文諧音梗T恤、包包與雜貨，峇里島獨有的趣味伴手禮。","p":"","s":"https://dijiwasanctuaries.com/magazine/best-10-bali-gift-shops-and-art-markets-in-2025-where-to-shop-for-souvenirs-crafts-and-culture","y":2025,"g":"https://www.google.com/maps/search/Joger/@-8.727377,115.177141,17z","lat":-8.727377,"lng":115.177141,"img":"joger","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Kuta Art Market","c":"購物點","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"Jl Melasti海邊小市集，紗籠、木雕、飾品與沙灘服，務必殺價。","p":"","s":"https://dijiwasanctuaries.com/magazine/best-10-bali-gift-shops-and-art-markets-in-2025-where-to-shop-for-souvenirs-crafts-and-culture","y":2025,"g":"https://www.google.com/maps/search/Kuta%20Art%20Market/@-8.724784,115.170415,17z","lat":-8.724784,"lng":115.170415,"img":"kuta-art-market","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"dijiwasanctuaries.com"},{"n":"BIASA Seminyak","c":"購物點","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"Jl Raya Seminyak 精品街代表，棉麻度假服；同街有 Magali Pascal、Lily Jean。","p":"","s":"https://whatsnewindonesia.com/ultimate-guide/bali/shops/top-seminyak-boutiques-where-find-best-fashion-treasures","y":2024,"g":"https://www.google.com/maps/search/BIASA%20Seminyak/@-8.692606,115.168084,17z","lat":-8.692606,"lng":115.168084,"img":"biasa-seminyak","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"whatsnewindonesia.com"},{"n":"Bintang Supermarket Seminyak","c":"購物點","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"伴手禮一站買齊：Kusuka 木薯片、椰子脆片、Ellips 髮油、泡麵、啤酒；非最便宜但最齊","p":"$","s":"https://www.dcard.tw/f/travel/p/259043392","y":2026,"g":"https://www.google.com/maps/search/Bintang%20Supermarket%20Seminyak/@-8.694164,115.167744,17z","lat":-8.694164,"lng":115.167744,"img":"bintang-supermarket-seminyak","pp":0,"sh":"","ev":"Dcard 8 篇 + 小紅書 2 篇 + YouTuber，Google 4.4 (10k)","k":"","rain":true,"h":"dcard.tw"},{"n":"Seminyak Flea Market","c":"購物點","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"Jl Kayu Aya每日10–18點露天市集，平價洋裝、藤包、飾品與紀念品。","p":"","s":"https://www.baliholidaysecrets.com/seminyak-flea-market/","y":2025,"g":"https://www.google.com/maps/search/Seminyak%20Flea%20Market/@-8.686231,115.156159,17z","lat":-8.686231,"lng":115.156159,"img":"seminyak-flea-market","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"baliholidaysecrets.com"},{"n":"Sukawati Art Market","c":"購物點","a":"Sukawati","r":"Ubud 周邊","w":"翻新後三層樓市場，畫作、木雕、紗籠、磁鐵鑰匙圈，全島最便宜。","p":"","s":"https://30sundays.club/blog/shopping-in-bali","y":2026,"g":"https://www.google.com/maps/search/Sukawati%20Art%20Market/@-8.596449,115.282342,17z","lat":-8.596449,"lng":115.282342,"img":"sukawati-art-market","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"30sundays.club"},{"n":"Ananda Soul","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"Jl Dewi Sita的永續珠寶店，回收銀製戒指、項鍊與手環。","p":"","s":"https://thehoneycombers.com/bali/shopping-in-ubud-best-stores/","y":2026,"g":"https://www.google.com/maps/search/Ananda%20Soul/@-8.510257,115.264379,17z","lat":-8.510257,"lng":115.264379,"img":"ananda-soul","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Coco Supermarket Ubud","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"零食泡麵與 Ellips 髮油比 Bintang 略便宜，山竹很甜；烏布與水明漾都有分店","p":"$","s":"https://www.dcard.tw/f/travel/p/261463537","y":2026,"g":"https://www.google.com/maps/search/Coco%20Supermarket%20Ubud/@-8.518019,115.263837,17z","lat":-8.518019,"lng":115.263837,"img":"","pp":0,"sh":"","ev":"Dcard 2 篇獨立比價，Google 約 4.3","k":"","rain":true,"h":"dcard.tw"},{"n":"Gaya Ceramic","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"Sayan的職人陶藝工作室，藝術陶器、燈具與家飾。","p":"","s":"https://thehoneycombers.com/bali/shopping-in-ubud-best-stores/","y":2026,"g":"https://www.google.com/maps/search/Gaya%20Ceramic/@-8.507565,115.242334,17z","lat":-8.507565,"lng":115.242334,"img":"gaya-ceramic","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"KOU Cuisine","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"Monkey Forest路小店，手工果醬、海鹽、香草糖與椰子油皂。","p":"","s":"https://www.dijiwasanctuaries.com/magazine/best-souvenir-shops-ubud-seminyak-bali","y":2025,"g":"https://www.google.com/maps/search/KOU%20Cuisine/@-8.509174,115.261602,17z","lat":-8.509174,"lng":115.261602,"img":"kou-cuisine","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Kevala Home","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"Jl Dewi Sita旗艦店，手工彩繪陶瓷餐具，峇里島陶器代表品牌。","p":"","s":"https://thehoneycombers.com/bali/shopping-in-ubud-best-stores/","y":2026,"g":"https://www.google.com/maps/search/Kevala%20Home/@-8.510354,115.264064,17z","lat":-8.510354,"lng":115.264064,"img":"kevala-home","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Tegun Galeri","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"Jl Hanoman藝廊式選品店，銀飾、寶石戒指、木雕與古董工藝。","p":"","s":"https://www.dijiwasanctuaries.com/magazine/best-souvenir-shops-ubud-seminyak-bali","y":2025,"g":"https://www.google.com/maps/search/Tegun%20Galeri/@-8.513812,115.264132,17z","lat":-8.513812,"lng":115.264132,"img":"tegun-galeri","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Threads of Life","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"Jl Kajeng的公平貿易織品店，手織伊卡、蠟染圍巾與家飾。","p":"","s":"https://thehoneycombers.com/bali/shopping-in-ubud-best-stores/","y":2026,"g":"https://www.google.com/maps/search/Threads%20of%20Life/@-8.504635,115.262323,17z","lat":-8.504635,"lng":115.262323,"img":"threads-of-life","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Ubud Art Market","c":"購物點","a":"Ubud","r":"Ubud 周邊","w":"皇宮對面，藤編包、蠟染與伊卡布、木雕、畫作，記得殺價。","p":"","s":"https://thehoneycombers.com/bali/shopping-in-ubud-best-stores/","y":2026,"g":"https://www.google.com/maps/search/Ubud%20Art%20Market/@-8.5067,115.2627,17z","lat":-8.5067,"lng":115.2627,"img":"ubud-art-market","pp":0,"sh":"","ev":"","k":"","rain":false,"h":"thehoneycombers.com"},{"n":"Hatch Uluwatu","c":"購物點","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"週日 8–17 點手作市集買小眾香水與手作；夜間變酒吧，活動夜收 50 萬入場可抵消費","p":"$","s":"https://littlebingin.com/guides/best-bars-uluwatu/","y":2026,"g":"https://www.google.com/maps/search/Hatch%20Uluwatu/@-8.814357,115.112087,17z","lat":-8.814357,"lng":115.112087,"img":"hatch-uluwatu","pp":0,"sh":"","ev":"小紅書 + Little Bingin + Hungry Pursuit，Google 4.8 (7k)","k":"","rain":false,"h":"littlebingin.com"},{"n":"Arak Bali 精品米酒（Iwak Arumery）","c":"伴手禮","a":"Airport","r":"Canggu · Seminyak · Kuta","w":"認明BPOM合法品牌，機場免稅店Dewi Sri好買，Iwak約Rp300–700k；台灣免稅1.5L、需託運。","p":"Rp 150,000–700,000","s":"https://finance.technews.tw/2025/01/23/import-duty-free-liquor-new-laws/","y":2025,"g":"https://www.google.com/maps/search/Ngurah%20Rai%20International%20Airport/@-8.746993,115.168166,17z","lat":-8.746993,"lng":115.168166,"img":"arak-bali-iwak-arumery","pp":0,"sh":"Ngurah Rai International Airport","ev":"bali.com Arak 指南；關務署 2025/1/25 起免稅 1.5L","k":"特色產品","rain":false,"h":"finance.technews.tw"},{"n":"Big Tree Jewelry 自製 7g 銀戒課","c":"伴手禮","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"一對一打造7g男款素戒，約Rp450–650k≈TWD855–1,235；預約制，需留2–3小時。","p":"Rp 450,000–650,000","s":"https://www.tripadvisor.com/AttractionProductReview-g12997640-d28466150-Bali_Canggu_Jewelry_Making_Class_with_7_Grams_of_Silver-Buduk_Bali.html","y":2025,"g":"https://www.google.com/maps/search/Big%20Tree%20Jewelry%20Classes/@-8.636669,115.158542,17z","lat":-8.636669,"lng":115.158542,"img":"big-tree-jewelry-7g","pp":0,"sh":"Big Tree Jewelry Classes","ev":"Tripadvisor 5.0/5（56則）","k":"飾品","rain":true,"h":"tripadvisor.com"},{"n":"Deus Ex Machina Sandbar 衝浪褲／T恤","c":"伴手禮","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"Canggu總部店，Sandbar衝浪褲Rp750k≈TWD1,425、T恤Rp420k起；在地售價比台灣低。","p":"Rp 420,000–750,000","s":"https://bali.live/p/mens-designer-clothing-in-bali-local-and-global-brands","y":2025,"g":"https://www.google.com/maps/search/Deus%20Ex%20Machina%20Temple%20of%20Enthusiasm/@-8.65136,115.133345,17z","lat":-8.65136,"lng":115.133345,"img":"deus-ex-machina-sandbar-t","pp":0,"sh":"Deus Ex Machina Temple of Enthusiasm","ev":"bali.live 男裝指南＋Deus Indonesia 官網價","k":"運動服飾","rain":false,"h":"bali.live"},{"n":"Indosole 回收輪胎底涼鞋","c":"伴手禮","a":"Canggu","r":"Canggu · Seminyak · Kuta","w":"峇里島製、輪胎回收鞋底，ESSNTLS夾腳拖約Rp700–950k；售價與海外相近但款式最全。","p":"Rp 700,000–950,000","s":"https://indosole.com/blogs/indosole/help-us-grow-with-lendforgood-io-bali-retail-store-expansion","y":2025,"g":"https://www.google.com/maps/search/Indosole%20Flagship%20Store/@-8.652648,115.132903,17z","lat":-8.652648,"lng":115.132903,"img":"indosole","pp":0,"sh":"Indosole Flagship Store","ev":"官網價格；Ubud 的 Yoga Barn 亦有售","k":"運動服飾","rain":false,"h":"indosole.com"},{"n":"Alas Arum 銀工坊 DIY 自製銀戒","c":"伴手禮","a":"Celuk","r":"Ubud 周邊","w":"2–3小時親手做戒指或墜子，含5–7g銀，單人Rp650k≈TWD1,235；超重銀另計，雨天好去處。","p":"Rp 650,000","s":"https://www.alasarumsilver.com/blog/best-silver-workshops-in-bali","y":2025,"g":"https://www.google.com/maps/search/Alas%20Arum%20Silver%20%26%20Gold%20Workshop/@-8.587689,115.2769,17z","lat":-8.587689,"lng":115.2769,"img":"alas-arum-diy","pp":0,"sh":"Alas Arum Silver & Gold Workshop","ev":"官方價目；Viator Celuk 銀工課 4.9/5（184則）","k":"飾品","rain":true,"h":"alasarumsilver.com"},{"n":"Sunaka Jewelry 925 純銀男戒／手環","c":"伴手禮","a":"Celuk","r":"Ubud 周邊","w":"1979年Celuk老銀匠轉型品牌，每件附真品證書，約Rp150k–1M；路邊攤銀飾多非925。","p":"Rp 150,000–1,000,000","s":"https://strugadesign.com/blogs/journal/best-handmade-silver-jewelry-bali","y":2026,"g":"https://www.google.com/maps/search/Sunaka%20Jewelry/@-8.600067,115.267055,17z","lat":-8.600067,"lng":115.267055,"img":"","pp":0,"sh":"Sunaka Jewelry","ev":"Honeycombers 2026 珠寶指南、RRI 2026 報導","k":"飾品","rain":false,"h":"strugadesign.com"},{"n":"ScentsoryLab 入門調香課","c":"伴手禮","a":"Kuta","r":"Canggu · Seminyak · Kuta","w":"第一晚住Kuta可去，90分鐘調15ml Rp385k／30ml Rp450k≈TWD855；Jl. Dewi Sartika 1。","p":"Rp 385,000–755,000","s":"https://finnsbeachclub.com/guides/best-perfume-workshops-bali/","y":2026,"g":"https://www.google.com/maps/search/ScentsoryLab%20Bali/@-8.73905,115.168208,17z","lat":-8.73905,"lng":115.168208,"img":"scentsorylab","pp":0,"sh":"ScentsoryLab Bali","ev":"Finns 2026 指南價目；What's New Indonesia 2025 列為在地調香品牌","k":"香水","rain":true,"h":"finnsbeachclub.com"},{"n":"L'Atelier Parfums & Créations 調香課","c":"伴手禮","a":"Seminyak","r":"Canggu · Seminyak · Kuta","w":"用印尼原料調出30ml專屬香水，90分鐘Rp1.19M≈TWD2,261；需提前預約，價位偏高。","p":"Rp 1,190,000–1,890,000","s":"https://finnsbeachclub.com/guides/best-perfume-workshops-bali/","y":2026,"g":"https://www.google.com/maps/search/L%27Atelier%20Parfums%20%26%20Cr%C3%A9ations/@-8.697364,115.171432,17z","lat":-8.697364,"lng":115.171432,"img":"l-atelier-parfums-cr-ations","pp":0,"sh":"L'Atelier Parfums & Créations","ev":"What's New Indonesia 2025/03 指南；Viator 好評","k":"香水","rain":true,"h":"finnsbeachclub.com"},{"n":"Svasensa 調香工作坊","c":"伴手禮","a":"Tegallalang","r":"Ubud 周邊","w":"90分鐘調出自己的30ml香水Rp595k≈TWD1,130、50ml Rp745k；在Kenderan需叫車，雨天好去處。","p":"Rp 595,000–745,000","s":"https://svasensa.com/workshop","y":2025,"g":"https://www.google.com/maps/search/Toya%20Ubud/@-8.446651,115.289212,17z","lat":-8.446651,"lng":115.289212,"img":"","pp":0,"sh":"Toya Ubud","ev":"官方價目；Klook/KKday 有售","k":"香水","rain":true,"h":"svasensa.com"},{"n":"Bali Buda 在地果醬與生蜂蜜","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"草莓、芒果、金塔馬尼柑橘等峇里島產果醬與蜂膠蜂蜜，約Rp60–120k；蜂蜜認明100% raw。","p":"Rp 60,000–120,000","s":"https://balibuda.com/product-category/jams-spreads-nut-butters/","y":2025,"g":"https://www.google.com/maps/search/Bali%20Buda%20Ubud/@-8.508803,115.266979,17z","lat":-8.508803,"lng":115.266979,"img":"bali-buda","pp":0,"sh":"Bali Buda Ubud","ev":"Bali Buda 官網分類頁列出 100% locally made 果醬","k":"果醬","rain":false,"h":"balibuda.com"},{"n":"Bali Buda 腰果醬 Cashew Butter","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"100%峇里島腰果、無添加，Rp179k≈TWD340；玻璃罐請託運並防撞。","p":"Rp 179,000","s":"https://balibuda.com/product/bali-buda-cashew-butter/","y":2025,"g":"https://www.google.com/maps/search/Bali%20Buda%20Ubud/@-8.508803,115.266979,17z","lat":-8.508803,"lng":115.266979,"img":"bali-buda-cashew-butter","pp":0,"sh":"Bali Buda Ubud","ev":"Bali Buda 官方產品頁；Ubud 老牌有機店，旅遊部落格多次推薦","k":"果醬","rain":false,"h":"balibuda.com"},{"n":"John Hardy 手工編織銀手鍊","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"峇里島出身的國際精品，回收銀手編鍊；多數Rp5M以上≈TWD9,500+，定價與國外同，看看就好。","p":"Rp 5,000,000+","s":"https://thehoneycombers.com/bali/jewellery-shopping-in-bali-best-brands/","y":2026,"g":"https://www.google.com/maps/search/John%20Hardy%20Kapal%20Bamboo%20Boutique/@-8.542085,115.219208,17z","lat":-8.542085,"lng":115.219208,"img":"john-hardy","pp":0,"sh":"John Hardy Kapal Bamboo Boutique","ev":"Honeycombers 2026 指南；Mambal 工坊可參觀","k":"飾品","rain":true,"h":"thehoneycombers.com"},{"n":"Junglegold Bali 可可植物奶巧克力","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"峇里島可可做的植物奶巧克力，45g Rp33k、100g Rp59k≈TWD112；Ubud在Bali Buda等有機店買得到。","p":"Rp 33,000–59,000","s":"https://bali.live/p/where-can-i-find-good-chocolate-in-bali","y":2025,"g":"https://www.google.com/maps/search/Bali%20Buda%20Ubud/@-8.508803,115.266979,17z","lat":-8.508803,"lng":115.266979,"img":"junglegold-bali","pp":0,"sh":"Bali Buda Ubud","ev":"bali.live 巧克力指南價目","k":"特色產品","rain":false,"h":"bali.live"},{"n":"KOU Cuisine 手工果醬與 Kusamba 海鹽","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"小罐手工果醬Rp40–70k，東岸Kusamba鹽田海鹽25g Rp14k、80g Rp30k；鹽和果醬都可入境台灣。","p":"Rp 14,000–70,000","s":"https://dijiwasanctuaries.com/magazine/best-souvenir-shops-ubud-seminyak-bali","y":2025,"g":"https://www.google.com/maps/search/KOU%20Cuisine/@-8.509174,115.261602,17z","lat":-8.509174,"lng":115.261602,"img":"","pp":0,"sh":"KOU Cuisine","ev":"KOU 官網價目；Dijiwa 2025 推薦；Jl. Monkey Forest 21","k":"果醬","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Krakakoa 單一產區巧克力","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"印尼bean-to-bar，一般Rp55.5k、單一產區Jembrana 85% Rp67.7k≈TWD129；怕熱請用保冷袋。","p":"Rp 39,500–67,710","s":"https://krakakoa.com/","y":2026,"g":"https://www.google.com/maps/search/Krakakoa%20Ubud/@-8.514872,115.260303,17z","lat":-8.514872,"lng":115.260303,"img":"","pp":0,"sh":"Krakakoa Ubud","ev":"官網價目；Kerobokan 旗艦店 Google 約4.9★","k":"特色產品","rain":false,"h":"krakakoa.com"},{"n":"Oaken Lab 淡香精（Stillroom 旗艦店）","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"印尼小眾香氛2026年開幕的Ubud旗艦店，50ml EDP Rp899k≈TWD1,708；每日12–20時。","p":"Rp 899,000","s":"https://www.nowbali.co.id/oaken-lab-opens-ubud-store-with-immersive-stillroom-concept/","y":2026,"g":"https://www.google.com/maps/search/Oaken%20Lab%20Ubud/@-8.494068,115.253281,17z","lat":-8.494068,"lng":115.253281,"img":"oaken-lab-stillroom","pp":0,"sh":"Oaken Lab Ubud","ev":"NOW! Bali 2026/05、superfuture 開店報導","k":"香水","rain":true,"h":"nowbali.co.id"},{"n":"Seniman Coffee 自烘 Kintamani 咖啡豆","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"Ubud精品烘豆標竿，250g約Rp150–220k≈TWD285–418；麝香貓咖啡多為籠養且難辨真偽，建議跳過。","p":"Rp 150,000–220,000","s":"https://www.scmp.com/news/asia/southeast-asia/article/3255629/bali-tourists-warned-avoid-civet-coffee-animals-kept-cages-and-fed-rotten-berries","y":2024,"g":"https://www.google.com/maps/search/Seniman%20Coffee%20Studio/@-8.506718,115.265205,17z","lat":-8.506718,"lng":115.265205,"img":"seniman-coffee-kintamani","pp":0,"sh":"Seniman Coffee Studio","ev":"Time Out 與多篇 Ubud 咖啡指南推薦","k":"特色產品","rain":true,"h":"scmp.com"},{"n":"Sensatia Botanicals Elements 天然香水","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"峇里島Karangasem起家的純淨保養品牌，10ml香水約Rp450k起≈TWD855；Seminyak 與機場也有店。","p":"Rp 450,000+","s":"https://www.trvlogue.com/en/bali-shopping-guide","y":2026,"g":"https://www.google.com/maps/search/Sensatia%20Botanicals%20Ubud/@-8.508244,115.261831,17z","lat":-8.508244,"lng":115.261831,"img":"","pp":0,"sh":"Sensatia Botanicals Ubud","ev":"NOW! Bali 報導；台灣部落格與 Dcard 常列為必買","k":"香水","rain":false,"h":"trvlogue.com"},{"n":"Tegun Galeri 銀質男戒與寶石戒","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"Jl. Hanoman民藝店，銀花絲與寶石戒約Rp330k–1.6M；問清是否925並索收據。","p":"Rp 330,000–1,600,000","s":"https://dijiwasanctuaries.com/magazine/best-souvenir-shops-ubud-seminyak-bali","y":2025,"g":"https://www.google.com/maps/search/Tegun%20Galeri/@-8.513812,115.264132,17z","lat":-8.513812,"lng":115.264132,"img":"tegun-galeri","pp":0,"sh":"Tegun Galeri","ev":"Dijiwa 2025/06 Ubud 伴手禮十選","k":"飾品","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Threads of Life 天然染 ikat 圍巾","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"公平貿易、原民織女手工天然染，圍巾約Rp490k起；不便宜但獨一無二。","p":"Rp 490,000–1,600,000","s":"https://dijiwasanctuaries.com/magazine/best-souvenir-shops-ubud-seminyak-bali","y":2025,"g":"https://www.google.com/maps/search/Threads%20of%20Life/@-8.504635,115.262323,17z","lat":-8.504635,"lng":115.262323,"img":"","pp":0,"sh":"Threads of Life","ev":"Lonely Planet 與 Dijiwa 2025 推薦","k":"特色產品","rain":false,"h":"dijiwasanctuaries.com"},{"n":"Utama Spice 精油複方","c":"伴手禮","a":"Ubud","r":"Ubud 周邊","w":"Ubud在地純植物精油品牌，10ml複方Rp183k≈TWD348；防蚊噴霧機場也買得到。","p":"Rp 172,000–263,000","s":"https://utamaspicebali.com/products/aromatherapy/page/3/","y":2025,"g":"https://www.google.com/maps/search/Utama%20Spice%20Ubud/@-8.516528,115.260011,17z","lat":-8.516528,"lng":115.260011,"img":"","pp":0,"sh":"Utama Spice Ubud","ev":"官網價目；台灣部落格與小紅書多次推薦","k":"特色產品","rain":false,"h":"utamaspicebali.com"},{"n":"Blood + Bone 峇里島在地衝浪服","c":"伴手禮","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"峇里島創立品牌，T恤Rp270k、短褲Rp450k≈TWD855；Canggu與Ubud也有店，尺碼偏亞洲。","p":"Rp 270,000–499,000","s":"https://bali.live/p/mens-designer-clothing-in-bali-local-and-global-brands","y":2025,"g":"https://www.google.com/maps/search/Blood%20%2B%20Bone%20Padang%20Padang/@-8.814292,115.112426,17z","lat":-8.814292,"lng":115.112426,"img":"blood-bone","pp":0,"sh":"Blood + Bone Padang Padang","ev":"bali.live 列為 Bali 出身品牌","k":"運動服飾","rain":false,"h":"bali.live"},{"n":"Drifter 自有品牌衝浪T／短褲","c":"伴手禮","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"家族經營的峇里島衝浪店，T恤Rp345k起、短褲Rp500k起；兼咖啡與藝廊，雨天可久坐。","p":"Rp 345,000–700,000","s":"https://bali.live/p/mens-designer-clothing-in-bali-local-and-global-brands","y":2025,"g":"https://www.google.com/maps/search/Drifter%20Surf%20Shop%20%26%20Cafe%20Uluwatu/@-8.814914,115.11232,17z","lat":-8.814914,"lng":115.11232,"img":"drifter-t","pp":0,"sh":"Drifter Surf Shop & Cafe Uluwatu","ev":"Nirvana Seminyak 2025 衝浪店指南、Dijiwa 2025 皆推薦","k":"運動服飾","rain":true,"h":"bali.live"},{"n":"Nusa Surfwear 熱帶印花衝浪褲","c":"伴手禮","a":"Uluwatu","r":"Uluwatu · Jimbaran · Nusa Dua","w":"2010年創立於Ungasan的在地衝浪品牌，男款衝浪褲／背心約Rp300–500k；試穿確認長度。","p":"Rp 300,000–500,000","s":"https://finnsbeachclub.com/guides/shopping-uluwatu","y":2025,"g":"https://www.google.com/maps/search/Nusa%20Surf%20Shop%20Ungasan/@-8.820975,115.145945,17z","lat":-8.820975,"lng":115.145945,"img":"nusa-surfwear","pp":0,"sh":"Nusa Surf Shop Ungasan","ev":"Finns Uluwatu 購物指南","k":"運動服飾","rain":false,"h":"finnsbeachclub.com"}];
+const CATS=["網美餐廳","餐廳","酒吧","抱石場","景點","體驗","購物中心","購物點","伴手禮"];
+const idr=v=>v?`約 IDR ${Math.round(v/1000)}k／人`:"";
+const REGIONS=["Ubud 周邊","Canggu · Seminyak · Kuta","Uluwatu · Jimbaran · Nusa Dua","Denpasar · Sanur","更遠"];
+const TOWNS=[["Ubud",-8.5069,115.2625,9],["Canggu",-8.6478,115.1385,10],["Seminyak",-8.6913,115.1683,10.5],["Kuta",-8.7184,115.1686,10.5],["Denpasar",-8.6705,115.2126,10],["Sanur",-8.6878,115.2620,11],["Jimbaran",-8.7908,115.1620,11],["Uluwatu",-8.8291,115.0849,9],["Nusa Dua",-8.8008,115.2317,11],["Tabanan",-8.5412,115.1253,10],["Kintamani",-8.2390,115.3780,9],["Amed",-8.3386,115.6553,10],["Lovina",-8.1620,115.0260,10],["Nusa Penida",-8.7450,115.5300,9],["Tegallalang",-8.4317,115.2793,11],["機場 DPS",-8.7482,115.1672,10],["Gilimanuk",-8.1700,114.4400,10],["Singaraja",-8.1120,115.0880,10]];
+let cat="",region="",q="",sel=-1,rain=false,inited=false;
+try{const s=JSON.parse(localStorage.getItem("bali.mapfilter")||"{}");cat=s.cat||"";region=s.region||"";rain=!!s.rain;}catch(e){}
+const G=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const catColor=c=>cssv("--c"+(CATS.indexOf(c)+1));
+
+function chips(el,items,current,onpick,all,dots){
+  el.innerHTML="";
+  const mk=(label,val,n)=>{const b=document.createElement("button");b.className="mchip";b.type="button";b.setAttribute("aria-pressed",String(current===val));
+    b.innerHTML=(dots&&val?`<b style="--dot:${catColor(val)}"></b>`:"")+esc(label)+(n!=null?`<i>${n}</i>`:"");b.onclick=()=>onpick(val);el.appendChild(b);};
+  mk(all,"",null);
+  items.forEach(([label,n])=>mk(label,label,n));
+}
+function save(){try{localStorage.setItem("bali.mapfilter",JSON.stringify({cat,region,rain}))}catch(e){}}
+function matches(p,skip){
+  if(skip==="rain"){const r=rain;rain=false;const ok=matches(p);rain=r;return ok;}
+  if(skip!=="cat"&&cat&&p.c!==cat)return false;
+  if(skip!=="region"&&region&&p.r!==region)return false;
+  if(rain&&!p.rain)return false;
+  if(q){const s=(p.n+" "+p.a+" "+p.w+" "+p.c+" "+(p.sh||"")).toLowerCase();if(!q.split(/\s+/).every(t=>s.includes(t)))return false;}
+  return true;
+}
+function render(){
+  const byCat=CATS.map(c=>[c,PLACES.filter(p=>p.c===c&&matches(p,"cat")).length]);
+  const byReg=REGIONS.map(r=>[r,PLACES.filter(p=>p.r===r&&matches(p,"region")).length]);
+  chips(G("mcats"),byCat,cat,v=>{cat=v;save();render()},"全部",true);
+  chips(G("mareas"),byReg.filter(x=>x[1]>0||x[0]===region),region,v=>{region=v;save();render()},"全島",false);
+  const rb=document.createElement("button");rb.className="mchip rain";rb.type="button";rb.setAttribute("aria-pressed",String(rain));rb.innerHTML="☔ 雨天也行<i>"+PLACES.filter(p=>p.rain&&matches(p,"rain")).length+"</i>";rb.onclick=()=>{rain=!rain;save();render()};G("mareas").appendChild(rb);
+  const hits=PLACES.map((p,i)=>({...p,i})).filter(matches);
+  G("mcount").textContent=hits.length===PLACES.length?`全部 ${hits.length} 個地點`:`${hits.length} 個地點`;
+  const out=[];let last=null;
+  for(const p of hits){
+    if(p.c!==last){last=p.c;const n=hits.filter(x=>x.c===p.c).length;out.push(`<div class="group"><b style="background:${catColor(p.c)};color:${catColor(p.c)}"></b>${esc(p.c)}<i>${n}</i></div>`);}
+    out.push(`<article class="place card${p.i===sel?" on":""}" id="mp${p.i}">
+      ${p.img?`<img src="places/${esc(p.img)}.jpg" alt="${esc(p.n)}" loading="lazy" decoding="async">`:""}
+      <div class="pbody">
+      <div class="ptop"><h2><a href="${esc(p.g)}" target="_blank" rel="noopener">${esc(p.n)}</a></h2>${p.p?`<span class="pr">${esc(p.p)}</span>`:""}</div>
+      <p class="pmeta">${esc([p.k||"",p.sh,p.a,idr(p.pp)].filter(Boolean).join(" · "))}${p.rain?" · ☔":""}</p>
+      <p class="why">${esc(p.w)}</p>
+      <div class="src"><button type="button" data-fly="${p.i}">地圖</button><a href="${esc(p.g)}" target="_blank" rel="noopener">Google Maps</a>${p.s?`<a href="${esc(p.s)}" target="_blank" rel="noopener">${esc(p.h)} · ${esc(p.y)}</a>`:""}</div>
+      </div></article>`);
+  }
+  G("mlist").innerHTML=out.join("")||`<div class="empty">沒有符合的地點</div>`;
+  if(map)updateMarkers(hits.map(p=>p.i));
+}
+G("mq").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();render()});
+G("mlist").addEventListener("click",e=>{const b=e.target.closest("[data-fly]");if(b){flyTo(+b.dataset.fly);}});
+G("legend").innerHTML=CATS.map(c=>`<span><i style="background:${catColor(c)}"></i>${esc(c)}</span>`).join("");
+
+/* map */
+let map=null,markers=[],landLayer,roadLayers=[],townLayer;
+function popupHtml(p,i){
+  return `<div class="pp">${p.img?`<img src="places/${esc(p.img)}.jpg" alt="">`:""}<div class="b"><h3>${esc(p.n)}</h3><p class="m"><i style="background:${catColor(p.c)}"></i>${esc([p.c,p.sh,p.a,p.p].filter(Boolean).join(" · "))}</p><p class="w">${esc(p.w)}</p><div class="l"><a href="${esc(p.g)}" target="_blank" rel="noopener">Google Maps ↗</a><a href="#mp${i}" data-card="${i}">看介紹</a></div></div></div>`;
+}
+function markerStyle(i,active){const p=PLACES[i];return {radius:active?9:6.5,fillColor:catColor(p.c),color:cssv("--marker-stroke"),weight:active?2.5:1.5,fillOpacity:1,opacity:1};}
+function updateMarkers(ids){
+  const set=new Set(ids);
+  markers.forEach((m,i)=>{const on=set.has(i);if(on&&!map.hasLayer(m))m.addTo(map);if(!on&&map.hasLayer(m))map.removeLayer(m);});
+}
+function select(i){
+  if(sel>=0&&markers[sel])markers[sel].setStyle(markerStyle(sel,false));
+  sel=i;
+  if(i>=0&&markers[i]){markers[i].setStyle(markerStyle(i,true)).bringToFront();}
+  document.querySelectorAll(".place.on").forEach(e=>e.classList.remove("on"));
+  const card=G("mp"+i);if(card)card.classList.add("on");
+}
+function flyTo(i){
+  const p=PLACES[i];select(i);
+  if(!map)return;
+  window.scrollTo({top:0,behavior:"smooth"});
+  map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),14),{duration:.8});
+  setTimeout(()=>markers[i].openPopup(),850);
+}
+function drawBase(data){
+  if(landLayer)map.removeLayer(landLayer);roadLayers.forEach(l=>map.removeLayer(l));roadLayers=[];
+  const land=cssv("--land"),coast=cssv("--coast");
+  landLayer=L.polygon(data.land.map(r=>r.map(([x,y])=>[y,x])),{fillColor:land,fillOpacity:1,color:coast,weight:1,interactive:false}).addTo(map);
+  const z=map.getZoom();
+  const spec={secondary:["--road3",z>=12?1:0.6],primary:["--road2",z>=12?1.6:1],trunk:["--road1",z>=12?2.2:1.4]};
+  for(const k of ["secondary","primary","trunk"]){
+    const [v,w]=spec[k];
+    const l=L.polyline(data.roads[k].map(r=>r.map(([x,y])=>[y,x])),{color:cssv(v),weight:w,opacity:1,interactive:false,lineCap:"round",lineJoin:"round"}).addTo(map);
+    roadLayers.push(l);
+  }
+  landLayer.bringToBack();
+}
+function drawTowns(){
+  if(townLayer)map.removeLayer(townLayer);
+  const z=map.getZoom();
+  townLayer=L.layerGroup(TOWNS.filter(t=>z>=t[3]).map(t=>L.marker([t[1],t[2]],{interactive:false,icon:L.divIcon({className:"town"+(t[3]<=9?" big":""),html:esc(t[0]),iconSize:null,iconAnchor:[-8,8]})})));
+  townLayer.addTo(map);
+}
+function initMap(){
+  map=L.map("map",{preferCanvas:true,zoomControl:false,attributionControl:false,minZoom:9,maxZoom:16,zoomSnap:.5,maxBounds:[[-9.3,113.9],[-7.7,116.2]],maxBoundsViscosity:.8});
+  L.control.zoom({position:"bottomright"}).addTo(map);
+  L.control.attribution({position:"bottomleft",prefix:""}).addAttribution("© OpenStreetMap contributors").addTo(map);
+  map.fitBounds([[-8.88,114.95],[-8.20,115.72]],{padding:[10,10]});
+  PLACES.forEach((p,i)=>{
+    const m=L.circleMarker([p.lat,p.lng],markerStyle(i,false));
+    m.bindPopup(()=>popupHtml(p,i),{closeButton:true,autoPanPadding:[24,24],maxWidth:260,minWidth:240});
+    m.on("click",()=>select(i));
+    m.on("popupopen",()=>{const el=document.querySelector(".pp [data-card]");if(el)el.onclick=ev=>{ev.preventDefault();m.closePopup();const card=G("mp"+i);if(card){card.scrollIntoView({behavior:"smooth",block:"center"});}else{cat="";region="";q="";G("mq").value="";save();render();setTimeout(()=>G("mp"+i)?.scrollIntoView({behavior:"smooth",block:"center"}),50);}}});
+    markers.push(m);
+  });
+  render();
+  fetch("basemap.json").then(r=>r.json()).then(data=>{window.__base=data;drawBase(data);drawTowns();
+    map.on("zoomend",()=>{drawBase(data);drawTowns();});
+  }).catch(()=>{});
+  const retheme=()=>{if(window.__base){drawBase(window.__base);drawTowns();}markers.forEach((m,i)=>m.setStyle(markerStyle(i,i===sel)));render();};
+  try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",retheme);}catch(e){}
+  new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+}
+window.__mapShow=()=>{
+  if(!inited){inited=true;if(window.L){initMap();}else{render();}return;}
+  if(map)setTimeout(()=>map.invalidateSize(),60);
+};
+render();
+if(!document.getElementById("view-map").hidden)window.__mapShow();
+})();
+</script>
+</body></html>
