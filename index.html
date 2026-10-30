@@ -11,12 +11,15 @@ const db = {
   doc: p => { const ref = fs.doc(BASE + p); return { set: d => ref.set(d), update: d => ref.update(d), delete: () => ref.delete(), onSnapshot: (cb, err) => ref.onSnapshot(cb, err) }; },
 };
 window.claude = { use: async n => n === 'db' ? db : n === 'user' ? { can: async () => true } : null };
-fs.doc(BASE + 'meta/seed').get().then(async s => {
-  if (s.exists) return;
-  const seed = await fetch('seed.json').then(r => r.json()); const b = fs.batch();
-  for (const [col, rows] of Object.entries(seed)) for (const r of rows) { const { id, ...d } = r; b.set(fs.doc(BASE + col + '/' + id), d); }
-  b.set(fs.doc(BASE + 'meta/seed'), { at: Date.now() }); await b.commit();
-}).catch(e => console.warn('seed', e));
+(async () => {
+  const seed = await fetch('seed.json').then(r => r.json());
+  for (const [col, rows] of Object.entries(seed)) {
+    const probe = await fs.collection(BASE + col).limit(1).get({ source: 'server' });
+    if (!probe.empty) continue;
+    const b = fs.batch(); for (const r of rows) { const { id, ...d } = r; b.set(fs.doc(BASE + col + '/' + id), d); } await b.commit();
+  }
+})().catch(e => console.warn('seed', e));
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 })();
 </script>
 </head><body><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;600&display=swap">
@@ -112,6 +115,12 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .hero-lead{margin:14px 0 0;font-size:16px;letter-spacing:-.01em;opacity:.9;max-width:34ch;text-shadow:0 1px 12px rgba(0,0,0,.4);line-height:1.4}
 .hero-lead b{font-weight:600;color:var(--accent-2)}
 
+.who{margin-top:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.04em;background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;border:1px solid rgba(255,255,255,.22);transition:transform .15s var(--ease-std)}
+.who:active{transform:scale(.95)}
+.who[data-unset="1"]{background:var(--accent);color:var(--on-accent);border-color:transparent;box-shadow:var(--glow)}
+.wx{display:inline-flex;gap:8px;align-items:center;margin-top:12px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:13px;font-weight:500;color:#fff}
+.wx:empty{display:none}
+.chip.day em{font-style:normal;font-size:11px;line-height:1;margin-top:1px;min-height:11px}
 /* compact bar that takes over once the hero scrolls away */
 .topbar{position:fixed;left:0;right:0;top:0;z-index:15;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));transform:translateY(-110%);transition:transform .45s var(--ease-ios),opacity .3s;opacity:0;pointer-events:none}
 .topbar[data-on="1"]{transform:none;opacity:1;pointer-events:auto}
@@ -210,11 +219,41 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .row .mark[data-on="1"]{background:var(--accent);border-color:var(--accent);box-shadow:0 0 16px color-mix(in oklch,var(--accent) 60%,transparent)}
 .row .mark svg{width:14px;height:14px;stroke:var(--on-accent);stroke-width:2.6;fill:none;stroke-dasharray:20;stroke-dashoffset:20;opacity:0;transition:stroke-dashoffset .35s var(--ease-out) .05s,opacity .1s}
 .row .mark[data-on="1"] svg{stroke-dashoffset:0;opacity:1}
+.row .vote{flex:0 0 auto;font-size:12px;font-weight:600;padding:7px 10px;border-radius:999px;background:var(--ctl);color:var(--muted);display:inline-flex;gap:4px;align-items:center;font-variant-numeric:tabular-nums}
+.row .vote[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.ini{display:flex;gap:3px;flex:0 0 auto}
+.ini i{font-style:normal;width:18px;height:18px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:10px;font-weight:700;display:grid;place-items:center;line-height:1}
+.row .voters{margin-top:5px}
 .row .lnk{flex:0 0 auto;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--accent);padding:7px 11px;border-radius:999px;background:var(--accent-soft);text-decoration:none}
 .add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:var(--r-card);border:1px dashed var(--muted2);color:var(--muted);font-size:15px;letter-spacing:-.012em;background:transparent;transition:background .15s;margin-top:4px}
 .add:active{background:var(--press)}
 .empty{padding:26px 22px;font-size:15px;letter-spacing:-.012em;color:var(--muted);line-height:1.6}
 .empty b{color:var(--fg);font-weight:400;display:block;font-family:var(--display);font-size:22px;letter-spacing:-.02em;margin-bottom:6px}
+
+/* ---------- packing ---------- */
+.pack{display:flex;gap:12px;align-items:center;width:100%;padding:11px 14px;text-align:left;transition:transform .15s var(--ease-std)}
+.pack:active{transform:scale(.99)}
+.pack .box{flex:0 0 auto;width:24px;height:24px;border-radius:8px;border:1.5px solid var(--muted2);display:grid;place-items:center;transition:background .2s,border-color .2s}
+.pack .box[data-on="1"]{background:var(--accent);border-color:var(--accent)}
+.pack .box svg{width:13px;height:13px;stroke:var(--on-accent);stroke-width:2.6;fill:none;opacity:0}
+.pack .box[data-on="1"] svg{opacity:1}
+.pack .body{flex:1;min-width:0;text-align:left}
+.pack .title{display:block;font-size:15px;font-weight:500;line-height:1.3}
+.pack .title[data-done="1"]{color:var(--muted2);text-decoration:line-through}
+.pack .sub{display:block;font-size:12px;color:var(--muted2);margin-top:1px}
+.prog{height:4px;border-radius:2px;background:var(--faint);margin:0 4px 10px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:2px;transition:width .4s var(--ease-out)}
+.cats-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:14px 0 10px;gap:2px;background:var(--faint)}
+.cats-bar i{display:block;height:100%}
+.cats-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.cats-leg span b{font-weight:500;color:var(--fg);font-family:var(--display);margin-left:4px;font-variant-numeric:tabular-nums}
+.settle .pp2[data-me="1"]{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.settle .tx div[data-me="1"]{color:var(--fg)}
+.settle .tx div[data-me="0"]{opacity:.55}
+.ghostbtn{display:inline-flex;align-items:center;gap:6px;margin:10px 4px 0;font-size:13px;font-weight:600;color:var(--accent);padding:8px 12px;border-radius:999px;background:var(--accent-soft);transition:transform .15s var(--ease-std)}
+.ghostbtn:active{transform:scale(.96)}
+.tel .v a{color:var(--accent);text-decoration:none;font-weight:600;font-variant-numeric:tabular-nums}
+.tel .k small{display:block;font-size:11px;color:var(--muted2);margin-top:1px}
 
 /* ---------- info ---------- */
 .flight{padding:18px 20px 16px;position:relative;overflow:hidden}
@@ -396,7 +435,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
   <div class="hero-fade" aria-hidden="true"></div>
   <div class="hero-in">
     <div class="hero-top">
-      <div class="brand">Bali<small>1.5 → 1.11 · 2027</small></div>
+      <div><div class="brand">Bali<small>1.5 → 1.11 · 2027</small></div><button class="who" type="button" id="who"></button></div>
       <div class="count" id="count"></div>
     </div>
     <div class="hero-text" id="hero-text"></div>
@@ -481,6 +520,21 @@ button{background:none;border:0;padding:0;cursor:pointer}
         <div class="k">票價</div><div class="v num">TWD 13,288</div>
       </div>
     </div>
+    <div class="section"><h2>打包清單</h2><span class="n" id="pack-n"></span></div>
+    <div class="prog"><i id="pack-prog"></i></div>
+    <div class="list" id="pack-list"></div>
+    <div class="section"><h2>緊急聯絡</h2><span class="n">出發前再核對一次</span></div>
+    <div class="kv tel">
+      <div class="k">綜合緊急<small>警察 110 · 救護車 118</small></div><div class="v"><a href="tel:112">112</a></div>
+      <div class="k">觀光警察 Kuta</div><div class="v"><a href="tel:+623617845988">+62 361 784 5988</a></div>
+      <div class="k">BIMC 醫院 Kuta<small>24 小時急診，講英文</small></div><div class="v"><a href="tel:+62361761263">+62 361 761 263</a></div>
+      <div class="k">Siloam 醫院 Kuta<small>24 小時</small></div><div class="v"><a href="tel:+62361779911">+62 361 779 911</a></div>
+      <div class="k">BIMC Ubud</div><div class="v"><a href="tel:+623612091030">+62 361 209 1030</a></div>
+      <div class="k">BIMC Nusa Dua<small>離 Uluwatu 最近的大醫院</small></div><div class="v"><a href="tel:+623613000911">+62 361 3000 911</a></div>
+      <div class="k">駐泗水辦事處急難<small>峇里島歸泗水管</small></div><div class="v"><a href="tel:+6282257669680">+62 822 5766 9680</a></div>
+      <div class="k">駐印尼代表處急難</div><div class="v"><a href="tel:+62811984676">+62 811 984 676</a></div>
+      <div class="k">外交部旅外急難<small>國內親友可撥</small></div><div class="v"><a href="tel:0800085095">0800 085 095</a></div>
+    </div>
     <div class="section"><h2>備忘</h2><span class="n" id="notes-n"></span></div>
     <div id="notes-list"></div>
     <div class="section"><h2>照片來源</h2></div>
@@ -514,6 +568,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
   <div class="f" id="fields"></div>
   <div class="actions">
     <button type="button" class="btn ghost danger" id="del" hidden>刪除</button>
+    <button type="button" class="btn ghost" id="toplan" hidden>排進行程</button>
     <button type="button" class="btn ghost" id="cancel">取消</button>
     <button type="submit" class="btn" id="save">儲存</button>
   </div>
@@ -532,6 +587,10 @@ const DAYS = [
 const CATS = { outdoor: '戶外', sight: '景點', food: '吃喝', shop: '伴手禮', stay: '住宿' };
 const MEMBERS = ['Matt', 'Charlie', '宗任', '蔡昀佑'];
 const ECATS = { food: ['🍜', '吃喝'], transport: ['🚗', '交通'], stay: ['🏡', '住宿'], play: ['🏄', '玩樂'], shop: ['🛍️', '購物'], other: ['💸', '其他'] };
+const INI = m => m.replace(/^蔡/, '').slice(0, 1).toUpperCase();
+const inis = names => names.length ? `<span class="ini">${names.map(m => `<i title="${esc(m)}">${esc(INI(m))}</i>`).join('')}</span>` : '';
+const WXPOS = { Kuta: [-8.7184, 115.1686], Ubud: [-8.5069, 115.2625], Uluwatu: [-8.8291, 115.0849], 'Nusa Penida': [-8.745, 115.53] };
+const WMO = c => c <= 1 ? ['☀️', '晴'] : c === 2 ? ['⛅', '多雲'] : c === 3 ? ['☁️', '陰'] : c < 50 ? ['🌫', '霧'] : c < 60 ? ['🌦', '毛毛雨'] : c < 70 ? ['🌧', '雨'] : c < 80 ? ['🌧', '雨'] : c < 90 ? ['🌦', '陣雨'] : ['⛈', '雷雨'];
 const fmtN = n => Math.round(n).toLocaleString('en-US');
 const fmtAmt = (n, cur) => cur === 'IDR' ? 'Rp ' + fmtN(n) : 'NT$ ' + fmtN(n);
 const toTWD = (n, cur) => cur === 'IDR' ? n / S.fx : n;
@@ -561,19 +620,51 @@ const store = {
 };
 const S = {
   tab: store.get('tab', 'plan'), day: store.get('day', 0), cat: store.get('cat', 'all'),
-  plan: [], ideas: [], notes: [], expenses: [], fx: 500, db: null, writable: null, ready: false, editing: null,
+  plan: [], ideas: [], notes: [], expenses: [], packing: [], fx: 500, me: store.get('me', null), db: null, writable: null, ready: false, editing: null,
 };
 const hashTab = (location.hash || '').slice(1);
 if (['plan', 'ideas', 'map', 'cost', 'info'].includes(hashTab)) S.tab = hashTab;
 
 /* ---------- time ---------- */
 const T0 = new Date(2027, 0, 5), T1 = new Date(2027, 0, 12);
-const todayIdx = () => { const n = new Date(); return Math.floor((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - T0) / 864e5); };
+const OVERRIDE = (() => { try { const q = new URLSearchParams(location.search).get('today'); return q ? new Date(q) : null; } catch { return null; } })();
+const now = () => OVERRIDE ? new Date(OVERRIDE.getTime() + (Date.now() % 864e5)) : new Date();
+const todayIdx = () => { const n = now(); return Math.floor((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - T0) / 864e5); };
 function countdown() {
-  const now = new Date(); const day = todayIdx(); const el = $('#count');
-  if (now < T0) el.innerHTML = `還有<b>${-day}</b>`;
-  else if (now < T1) el.innerHTML = `Day<b>${day + 1}</b>`;
+  const day = todayIdx(); const el = $('#count'); const n = now();
+  if (n < T0) el.innerHTML = `還有<b>${-day}</b>`;
+  else if (n < T1) el.innerHTML = `Day<b>${day + 1}</b>`;
   else el.innerHTML = `回來了<b>✓</b>`;
+}
+/* ---------- who am I ---------- */
+function renderWho() { const b = $('#who'); b.textContent = S.me ? `我是 ${S.me}` : '我是誰？點一下選'; b.dataset.unset = S.me ? '0' : '1'; }
+$('#who').addEventListener('click', () => openSheet('me', null));
+const needMe = () => { if (S.me) return true; openSheet('me', null); return false; };
+/* ---------- weather (Open-Meteo, no key; only when the day is within the 16-day forecast) ---------- */
+async function weatherFor(place) {
+  const k = 'wx.' + place; const c = store.get(k, null);
+  if (c && Date.now() - c.t < 3 * 36e5) return c.d;
+  const [lat, lng] = WXPOS[place] || WXPOS.Ubud;
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FMakassar&forecast_days=16`);
+    const j = await r.json(); const d = {};
+    j.daily.time.forEach((t, i) => { d[t] = { code: j.daily.weather_code[i], max: j.daily.temperature_2m_max[i], min: j.daily.temperature_2m_min[i], pop: j.daily.precipitation_probability_max[i] }; });
+    store.set(k, { t: Date.now(), d }); return d;
+  } catch { return null; }
+}
+const dayISO = i => `2027-01-${String(5 + i).padStart(2, '0')}`;
+const inRange = i => { const diff = i - todayIdx(); return diff >= 0 && diff <= 15; };
+async function renderWeather() {
+  const el = $('#wx'); if (!el) return;
+  if (!inRange(S.day)) { el.textContent = ''; return; }
+  const w = await weatherFor(DAYS[S.day].place); const d = w && w[dayISO(S.day)];
+  if (!d || S.tab !== 'plan') return;
+  const [ic, tx] = WMO(d.code);
+  el.innerHTML = `${ic} ${tx} · ${Math.round(d.max)}° / ${Math.round(d.min)}° · 降雨 ${d.pop}%`;
+}
+async function renderDayWeather() {
+  const days = DAYS.map((d, i) => i).filter(inRange); if (!days.length) return;
+  for (const i of days) { const w = await weatherFor(DAYS[i].place); const d = w && w[dayISO(i)]; const em = $(`#days [data-i="${i}"] em`); if (d && em) em.textContent = WMO(d.code)[0]; }
 }
 countdown(); setInterval(countdown, 60000);
 
@@ -584,8 +675,9 @@ function renderHero() {
     const d = DAYS[S.day];
     const items = S.plan.filter(p => p.day === S.day).sort(byTime);
     const first = items[0];
-    h.innerHTML = `<div class="eyebrow">Day ${S.day + 1} · 週${d.w} · ${d.m} 月 ${d.d} 日</div><div class="hero-big">${esc(d.place)}</div><div class="hero-lead">${first ? `<b>${esc(first.time || '')}</b> ${esc(first.title)}` : esc(d.sub)}</div>`;
+    h.innerHTML = `<div class="eyebrow">Day ${S.day + 1} · 週${d.w} · ${d.m} 月 ${d.d} 日</div><div class="hero-big">${esc(d.place)}</div><div class="hero-lead">${first ? `<b>${esc(first.time || '')}</b> ${esc(first.title)}` : esc(d.sub)}</div><div class="wx" id="wx"></div>`;
     tb.innerHTML = `<span class="num">${d.m}.${d.d}</span><span>${esc(d.place)}</span><small>週${d.w} · Day ${S.day + 1}</small>`;
+    renderWeather();
   } else if (S.tab === 'ideas') {
     const n = S.ideas.length, go = S.ideas.filter(i => i.status === 'go').length;
     h.innerHTML = `<div class="eyebrow">口袋名單</div><div class="hero-big zh">想去的<br>地方</div><div class="hero-lead">${n ? `${n} 個候選 · <b>${go}</b> 個已確定` : '點右邊的圈圈，把想去的地方確定下來'}</div>`;
@@ -637,7 +729,7 @@ let toastT; function toast(msg) { const t = $('#toast'); t.textContent = msg; t.
 function emptyCard(kind) {
   if (!S.db) return `<div class="empty"><b>資料庫還沒接上</b>把 Firebase 的設定填進去之後，四個人打開這個網址就會同步。</div>`;
   if (!S.ready) return `<div class="empty">載入中</div>`;
-  const text = { plan: '這天還沒安排', ideas: '還沒有想去的地方', notes: '還沒有備忘', expenses: '還沒有消費' }[kind];
+  const text = { plan: '這天還沒安排', ideas: '還沒有想去的地方', notes: '還沒有備忘', expenses: '還沒有消費', packing: '還沒有東西要帶' }[kind];
   return `<div class="empty">${text}</div>`;
 }
 const canEdit = () => S.db && S.writable !== false;
@@ -645,12 +737,13 @@ const canEdit = () => S.db && S.writable !== false;
 /* ---------- plan ---------- */
 function renderDays() {
   const ti = todayIdx();
-  $('#days').innerHTML = DAYS.map((d, i) => `<button class="chip day" role="tab" data-i="${i}" aria-pressed="${i === S.day}" data-today="${i === ti ? 1 : 0}"><small>週${d.w}</small><span>${d.d}</span><i></i></button>`).join('');
+  $('#days').innerHTML = DAYS.map((d, i) => `<button class="chip day" role="tab" data-i="${i}" aria-pressed="${i === S.day}" data-today="${i === ti ? 1 : 0}"><small>週${d.w}</small><span>${d.d}</span><em></em><i></i></button>`).join('');
+  renderDayWeather();
   $('#days').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { S.day = +b.dataset.i; store.set('day', S.day); renderDays(); renderPlan(); syncPhoto(); renderHero(); }));
 }
 function renderPlan() {
   const items = S.plan.filter(p => p.day === S.day).sort(byTime);
-  const ti = todayIdx(); const now = new Date(); const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const ti = todayIdx(); const n = now(); const hm = `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
   let nowId = null;
   if (ti === S.day) { for (const p of items) if ((p.time || '00:00') <= hm) nowId = p.id; }
   let html = items.length ? items.map((p, idx) => {
@@ -660,7 +753,9 @@ function renderPlan() {
       <span class="card"><span class="title">${esc(p.title)}</span>${p.note ? `<div class="note">${esc(p.note)}</div>` : ''}${p.id === nowId ? '<span class="tag">現在</span>' : ''}</span>
     </button>`; }).join('') : emptyCard('plan');
   if (canEdit()) html += `<button class="add" type="button" id="add-plan">＋ 新增這天的行程</button>`;
+  if (items.length) html += `<button class="ghostbtn" type="button" id="copy-day">⧉ 複製這天行程</button>`;
   $('#plan-list').innerHTML = html;
+  $('#copy-day')?.addEventListener('click', () => { const d = DAYS[S.day]; copyText(`${d.m}/${d.d} 週${d.w} · ${d.place}\n` + items.map(p => `${p.time || '--:--'} ${p.title}${p.note ? '（' + p.note.replace(/\n/g, ' ') + '）' : ''}`).join('\n')); });
   $('#plan-list').querySelectorAll('.tl-item').forEach(b => b.addEventListener('click', () => canEdit() && openSheet('plan', S.plan.find(p => p.id === b.dataset.id))));
   $('#add-plan')?.addEventListener('click', () => openSheet('plan', null));
   if (S.tab === 'plan') renderHero();
@@ -685,13 +780,15 @@ function renderGo() {
 }
 function renderIdeas() {
   renderGo();
+  const voters = i => MEMBERS.filter(m => i.votes && i.votes[m]);
   const items = S.ideas.filter(i => S.cat === 'all' || i.cat === S.cat)
-    .sort((a, b) => (a.status === 'go') === (b.status === 'go') ? (a.order ?? 0) - (b.order ?? 0) : a.status === 'go' ? -1 : 1);
-  let html = items.length ? items.map(i => { const m = meta(i); return `
+    .sort((a, b) => (a.status === 'go') !== (b.status === 'go') ? (a.status === 'go' ? -1 : 1) : voters(b).length - voters(a).length || (a.order ?? 0) - (b.order ?? 0));
+  let html = items.length ? items.map(i => { const m = meta(i); const v = voters(i); return `
     <div class="row card" data-id="${i.id}" data-go="${i.status === 'go' ? 1 : 0}">
       ${thumb(i)}
-      <button class="body" type="button" data-edit="${i.id}"><span class="title">${esc(i.name)}</span><div class="area">${esc(m.area)}</div>${m.price ? `<div class="price">${esc(m.price)}</div>` : ''}</button>
+      <button class="body" type="button" data-edit="${i.id}"><span class="title">${esc(i.name)}</span><div class="area">${esc(m.area)}</div>${m.price ? `<div class="price">${esc(m.price)}</div>` : ''}${v.length ? `<div class="voters">${inis(v)}</div>` : ''}</button>
       ${i.url ? `<a class="lnk" href="${esc(i.url)}" target="_blank" rel="noopener">${LINK_LABEL[i.cat] || '連結'}</a>` : ''}
+      <button class="vote" type="button" data-vote="${i.id}" aria-pressed="${S.me && i.votes && i.votes[S.me] ? 'true' : 'false'}">想去${v.length ? ` ${v.length}` : ''}</button>
       <button class="mark" type="button" data-go="${i.id}" data-on="${i.status === 'go' ? 1 : 0}" aria-label="確定要去">${check}</button>
     </div>`; }).join('') : emptyCard('ideas');
   if (canEdit()) html += `<button class="add" type="button" id="add-idea">＋ 新增想去的地方</button>`;
@@ -703,8 +800,52 @@ function renderIdeas() {
     b.dataset.on = next === 'go' ? 1 : 0; b.closest('.row').dataset.go = b.dataset.on;
     try { await S.db.doc('ideas/' + it.id).update({ status: next }); } catch (e) { fail(e); }
   }));
+  $('#ideas-list').querySelectorAll('[data-vote]').forEach(b => b.addEventListener('click', async () => {
+    if (!canEdit() || !needMe()) return;
+    const it = S.ideas.find(i => i.id === b.dataset.vote); const votes = { ...(it.votes || {}) };
+    if (votes[S.me]) delete votes[S.me]; else votes[S.me] = true;
+    try { await S.db.doc('ideas/' + it.id).update({ votes }); } catch (e) { fail(e); }
+  }));
   $('#add-idea')?.addEventListener('click', () => openSheet('ideas', null));
+  window.__mapRefresh?.();
   if (S.tab === 'ideas') renderHero();
+}
+
+/* ---------- from the map ---------- */
+const MAPCAT = { '網美餐廳': 'food', '餐廳': 'food', '酒吧': 'food', '抱石場': 'outdoor', '體驗': 'outdoor', '景點': 'sight', '購物中心': 'shop', '購物點': 'shop', '伴手禮': 'shop' };
+const normName = s => String(s || '').toLowerCase().replace(/[^a-z0-9一-鿿]/g, '');
+window.__hasIdea = name => S.ideas.some(i => normName(i.name) === normName(name));
+window.__addIdea = async p => {
+  if (!canEdit()) return toast('資料庫還沒接上');
+  if (window.__hasIdea(p.n)) return toast('已經在名單裡了');
+  const data = { name: p.n, cat: MAPCAT[p.c] || 'sight', area: p.a || '', note: (p.w || '').slice(0, 60), url: p.g || '', status: 'idea', order: Date.now(), votes: S.me ? { [S.me]: true } : {} };
+  try { await S.db.collection('ideas').add(data); toast('已加進名單'); } catch (e) { fail(e); }
+};
+
+/* ---------- packing ---------- */
+function renderPacking() {
+  const items = [...S.packing].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const me = S.me; const done = me ? items.filter(i => i.by && i.by[me]).length : 0;
+  $('#pack-n').textContent = items.length ? (me ? `${done} / ${items.length}` : `${items.length} 項`) : '';
+  $('#pack-prog').style.width = items.length && me ? `${Math.round(done / items.length * 100)}%` : '0%';
+  let html = items.map(i => { const others = MEMBERS.filter(m => m !== me && i.by && i.by[m]); const on = me && i.by && i.by[me]; return `
+    <div class="pack card" data-id="${i.id}">
+      <button class="box" type="button" data-tick="${i.id}" data-on="${on ? 1 : 0}" aria-label="打包好了">${check}</button>
+      <button class="body" type="button" data-editpack="${i.id}"><span class="title" data-done="${on ? 1 : 0}">${esc(i.title)}</span>${i.note ? `<span class="sub">${esc(i.note)}</span>` : ''}</button>
+      ${inis(others)}
+    </div>`; }).join('');
+  if (!items.length) html += emptyCard('packing');
+  if (canEdit()) html += `<button class="add" type="button" id="add-pack">＋ 新增要帶的東西</button>`;
+  $('#pack-list').innerHTML = html;
+  $('#pack-list').querySelectorAll('[data-tick]').forEach(b => b.addEventListener('click', async () => {
+    if (!canEdit() || !needMe()) return;
+    const it = S.packing.find(i => i.id === b.dataset.tick); const by = { ...(it.by || {}) };
+    if (by[S.me]) delete by[S.me]; else by[S.me] = true;
+    b.dataset.on = by[S.me] ? 1 : 0;
+    try { await S.db.doc('packing/' + it.id).update({ by }); } catch (e) { fail(e); }
+  }));
+  $('#pack-list').querySelectorAll('[data-editpack]').forEach(b => b.addEventListener('click', () => canEdit() && openSheet('packing', S.packing.find(i => i.id === b.dataset.editpack))));
+  $('#add-pack')?.addEventListener('click', () => openSheet('packing', null));
 }
 
 /* ---------- notes ---------- */
@@ -750,12 +891,26 @@ function costTotals() {
   }
   return { total, paid, owed, net, tx, n: S.expenses.length };
 }
+const ECOL = { food: 'var(--c2)', transport: 'var(--c3)', stay: 'var(--c6)', play: 'var(--c5)', shop: 'var(--c1)', other: 'var(--c7)' };
+function settleText() {
+  const t = costTotals();
+  const lines = [`Bali 2027 結算（1 TWD = ${S.fx} IDR）`, `總花費 NT$ ${fmtN(t.total)} · ${t.n} 筆 · 每人約 NT$ ${fmtN(t.total / MEMBERS.length)}`, ''];
+  MEMBERS.forEach(m => lines.push(`${m}：付了 ${fmtN(t.paid[m])}，應付 ${fmtN(t.owed[m])}，${t.net[m] > 0.5 ? '應收 ' + fmtN(t.net[m]) : t.net[m] < -0.5 ? '應付 ' + fmtN(-t.net[m]) : '剛好'}`));
+  if (t.tx.length) { lines.push('', '轉帳：'); t.tx.forEach(([a, b, x]) => lines.push(`${a} → ${b}  NT$ ${fmtN(x)}`)); }
+  return lines.join('\n');
+}
 function renderSettle() {
   const t = costTotals();
+  const byCat = Object.keys(ECATS).map(k => [k, S.expenses.filter(e => e.cat === k).reduce((s, e) => s + toTWD(+e.amount || 0, e.cur), 0)]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]);
   $('#settle').innerHTML = `<div class="settle card">
-    <div class="people">${MEMBERS.map(m => `<div class="pp2"><div class="nm">${esc(m)}</div><div class="net ${t.net[m] > 0.5 ? 'pos' : t.net[m] < -0.5 ? 'neg' : ''}">${t.net[m] > 0.5 ? '+' : t.net[m] < -0.5 ? '−' : ''}${fmtN(Math.abs(t.net[m]))}</div><div class="paid">付 ${fmtN(t.paid[m])}</div></div>`).join('')}</div>
-    ${t.tx.length ? `<div class="tx">${t.tx.map(([a, b, x]) => `<div><span><b>${esc(a)}</b> → <b>${esc(b)}</b></span><span class="amt">NT$ ${fmtN(x)}</span></div>`).join('')}</div>` : t.n ? `<div class="done">已經平了，不用互轉</div>` : `<div class="done">記了帳以後，這裡會算出誰要給誰多少</div>`}
-  </div>`;
+    <div class="people">${MEMBERS.map(m => `<div class="pp2" data-me="${m === S.me ? 1 : 0}"><div class="nm">${esc(m)}</div><div class="net ${t.net[m] > 0.5 ? 'pos' : t.net[m] < -0.5 ? 'neg' : ''}">${t.net[m] > 0.5 ? '+' : t.net[m] < -0.5 ? '−' : ''}${fmtN(Math.abs(t.net[m]))}</div><div class="paid">付 ${fmtN(t.paid[m])}</div></div>`).join('')}</div>
+    ${t.tx.length ? `<div class="tx">${t.tx.map(([a, b, x]) => `<div data-me="${!S.me ? '' : (a === S.me || b === S.me) ? 1 : 0}"><span><b>${esc(a)}</b> → <b>${esc(b)}</b></span><span class="amt">NT$ ${fmtN(x)}</span></div>`).join('')}</div>` : t.n ? `<div class="done">已經平了，不用互轉</div>` : `<div class="done">記了帳以後，這裡會算出誰要給誰多少</div>`}
+    ${byCat.length ? `<div class="cats-bar">${byCat.map(([k, v]) => `<i style="width:${(v / t.total * 100).toFixed(1)}%;background:${ECOL[k]}"></i>`).join('')}</div><div class="cats-leg">${byCat.map(([k, v]) => `<span>${ECATS[k][0]} ${ECATS[k][1]}<b>${fmtN(v)}</b></span>`).join('')}</div>` : ''}
+  </div>${t.n ? `<button class="ghostbtn" type="button" id="copy-settle">⧉ 複製結算，貼到群組</button>` : ''}`;
+  $('#copy-settle')?.addEventListener('click', () => copyText(settleText()));
+}
+function copyText(text) {
+  navigator.clipboard?.writeText(text).then(() => toast('已複製')).catch(() => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('已複製'); } catch { toast('複製失敗'); } ta.remove(); });
 }
 const dayLabel = iso => { const d = new Date(iso); if (isNaN(d)) return '未標時間'; const i = Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - T0) / 864e5); return `${d.getMonth() + 1} 月 ${d.getDate()} 日${i >= 0 && i < 7 ? ` · Day ${i + 1}` : ''}`; };
 const hhmm = iso => { const d = new Date(iso); return isNaN(d) ? '' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
@@ -822,7 +977,7 @@ const FIELDS = {
     <div class="two"><input id="f-amt" type="text" inputmode="decimal" placeholder="金額" value="${d?.amount ?? ''}" required><div class="seg cur" id="f-cur">${['IDR', 'TWD'].map(c => `<button type="button" data-v="${c}" aria-pressed="${(d?.cur || 'IDR') === c}">${c}</button>`).join('')}</div></div>
     <div class="seg" id="f-ecat">${Object.entries(ECATS).map(([k, [ic, v]]) => `<button type="button" data-v="${k}" aria-pressed="${(d?.cat || 'food') === k}">${ic} ${v}</button>`).join('')}</div>
     <label class="lbl">誰出的</label>
-    <div class="seg" id="f-payer">${MEMBERS.map(m => `<button type="button" data-v="${esc(m)}" aria-pressed="${(d?.payer || MEMBERS[0]) === m}">${esc(m)}</button>`).join('')}</div>
+    <div class="seg" id="f-payer">${MEMBERS.map(m => `<button type="button" data-v="${esc(m)}" aria-pressed="${(d?.payer || S.me || MEMBERS[0]) === m}">${esc(m)}</button>`).join('')}</div>
     <label class="lbl">誰分攤</label>
     <div class="seg" id="f-mode"><button type="button" data-v="equal" aria-pressed="${(d?.mode || 'equal') === 'equal'}">平攤</button><button type="button" data-v="custom" aria-pressed="${d?.mode === 'custom'}">自訂金額</button></div>
     <div class="seg multi" id="f-members" ${d?.mode === 'custom' ? 'hidden' : ''}>${MEMBERS.map(m => `<button type="button" data-v="${esc(m)}" aria-pressed="${!(d?.members) || !d.members.length || d.members.includes(m)}">${esc(m)}</button>`).join('')}</div>
@@ -832,12 +987,19 @@ const FIELDS = {
   fx: d => `
     <input id="f-rate" type="text" inputmode="decimal" placeholder="500" value="${d?.rate ?? ''}" required>
     <div class="hint">1 台幣等於幾印尼盾。2026 年 10 月約 500；出發前查一下再改。</div>`,
+  me: () => `
+    <div class="seg" id="f-me">${MEMBERS.map(m => `<button type="button" data-v="${esc(m)}" aria-pressed="${S.me === m}">${esc(m)}</button>`).join('')}</div>
+    <div class="hint">只記在這支手機上，用來投票、打包打勾和記帳預設付款人。</div>`,
+  packing: d => `
+    <input id="f-ptitle" placeholder="要帶什麼" value="${esc(d?.title)}" required>
+    <input id="f-pnote" placeholder="備註，選填" value="${esc(d?.note)}">`,
 };
-const TITLES = { plan: ['新增行程', '編輯行程'], ideas: ['新增地點', '編輯地點'], notes: ['新增備忘', '編輯備忘'], expenses: ['新增消費', '編輯消費'], fx: ['匯率', '匯率'] };
-function openSheet(kind, doc) {
+const TITLES = { plan: ['新增行程', '編輯行程'], ideas: ['新增地點', '編輯地點'], notes: ['新增備忘', '編輯備忘'], expenses: ['新增消費', '編輯消費'], fx: ['匯率', '匯率'], me: ['我是誰', '我是誰'], packing: ['新增要帶的', '編輯'] };
+function openSheet(kind, doc, defaults) {
   S.editing = { kind, doc };
   $('#sheet-title').textContent = TITLES[kind][doc ? 1 : 0];
-  $('#fields').innerHTML = FIELDS[kind](doc);
+  $('#fields').innerHTML = FIELDS[kind](doc || defaults || null);
+  $('#toplan').hidden = !(kind === 'ideas' && doc);
   $('#fields').querySelectorAll('.seg').forEach(seg => seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
     if (seg.classList.contains('multi')) b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
     else seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
@@ -850,14 +1012,18 @@ function openSheet(kind, doc) {
 function closeSheet() { $('#dim').dataset.open = '0'; $('#sheet').dataset.open = '0'; S.editing = null; }
 $('#dim').addEventListener('click', closeSheet);
 $('#cancel').addEventListener('click', closeSheet);
+$('#toplan').addEventListener('click', () => { const d = S.editing?.doc; if (!d) return; closeSheet(); setTimeout(() => openSheet('plan', null, { day: S.day, title: d.name, note: [d.area, d.note].filter(Boolean).join(' · ') }), 350); });
 const segVal = id => $(`#${id} [aria-pressed="true"]`)?.dataset.v;
 function fail(e) { console.error(e); if (e && e.code === 'invalid_argument' && S.writable === null) { S.writable = false; renderAll(); } toast('沒有存成功'); }
 $('#sheet').addEventListener('submit', async ev => {
-  ev.preventDefault(); if (!S.editing || !S.db) return;
+  ev.preventDefault(); if (!S.editing) return;
+  if (S.editing.kind === 'me') { const v = segVal('f-me'); if (!v) return toast('選一個名字'); S.me = v; store.set('me', v); closeSheet(); renderWho(); renderAll(); toast(`好，${v}`); return; }
+  if (!S.db) return;
   const { kind, doc } = S.editing; let data;
   if (kind === 'plan') data = { day: +segVal('f-day'), time: $('#f-time').value, title: $('#f-title').value.trim(), note: $('#f-note').value.trim() };
   if (kind === 'ideas') data = { name: $('#f-name').value.trim(), cat: segVal('f-cat'), area: $('#f-area').value.trim(), note: $('#f-inote').value.trim(), url: $('#f-url').value.trim(), status: doc?.status || 'idea', order: doc?.order ?? Date.now() };
   if (kind === 'notes') data = { title: $('#f-ntitle').value.trim(), body: $('#f-body').value.trim(), order: doc?.order ?? Date.now() };
+  if (kind === 'packing') data = { title: $('#f-ptitle').value.trim(), note: $('#f-pnote').value.trim(), by: doc?.by || {}, order: doc?.order ?? Date.now() };
   if (kind === 'expenses') {
     const amount = numOf($('#f-amt').value); const mode = segVal('f-mode');
     const members = [...$('#f-members').querySelectorAll('[aria-pressed="true"]')].map(b => b.dataset.v);
@@ -891,7 +1057,7 @@ document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click'
 }));
 
 /* ---------- data ---------- */
-function renderAll() { renderDays(); renderPlan(); renderCats(); renderIdeas(); renderNotes(); renderExpenses(); renderHero(); }
+function renderAll() { renderDays(); renderPlan(); renderCats(); renderIdeas(); renderNotes(); renderPacking(); renderExpenses(); renderHero(); renderWho(); }
 showTab(S.tab);
 renderAll();
 heroH = $('#hero').offsetHeight; onScroll();
@@ -907,6 +1073,8 @@ heroH = $('#hero').offsetHeight; onScroll();
   sub('ideas', 'ideas', () => { renderCats(); renderIdeas(); });
   sub('notes', 'notes', renderNotes);
   sub('expenses', 'expenses', renderExpenses);
+  sub('packing', 'packing', renderPacking);
+  if (!S.me) setTimeout(() => { if (!S.me && !S.editing) openSheet('me', null); }, 1200);
   try { db.doc('settings/fx').onSnapshot(d => { const v = d && d.exists !== false && d.data ? d.data() : null; if (v && v.idr_per_twd) { S.fx = +v.idr_per_twd; renderExpenses(); } }, () => {}); } catch (e) {}
   renderAll();
 })();
@@ -960,14 +1128,14 @@ function render(){
       <div class="ptop"><h2><a href="${esc(p.g)}" target="_blank" rel="noopener">${esc(p.n)}</a></h2>${p.p?`<span class="pr">${esc(p.p)}</span>`:""}</div>
       <p class="pmeta">${esc([p.k||"",p.sh,p.a,idr(p.pp)].filter(Boolean).join(" · "))}${p.rain?" · ☔":""}</p>
       <p class="why">${esc(p.w)}</p>
-      <div class="src"><button type="button" data-fly="${p.i}">地圖</button><a href="${esc(p.g)}" target="_blank" rel="noopener">Google Maps</a>${p.s?`<a href="${esc(p.s)}" target="_blank" rel="noopener">${esc(p.h)} · ${esc(p.y)}</a>`:""}</div>
+      <div class="src"><button type="button" data-fly="${p.i}">地圖</button><button type="button" data-addidea="${p.i}">${window.__hasIdea&&window.__hasIdea(p.n)?"✓ 名單":"＋ 名單"}</button><a href="${esc(p.g)}" target="_blank" rel="noopener">Google Maps</a>${p.s?`<a href="${esc(p.s)}" target="_blank" rel="noopener">${esc(p.h)} · ${esc(p.y)}</a>`:""}</div>
       </div></article>`);
   }
   G("mlist").innerHTML=out.join("")||`<div class="empty">沒有符合的地點</div>`;
   if(map)updateMarkers(hits.map(p=>p.i));
 }
 G("mq").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();render()});
-G("mlist").addEventListener("click",e=>{const b=e.target.closest("[data-fly]");if(b){flyTo(+b.dataset.fly);}});
+G("mlist").addEventListener("click",async e=>{const b=e.target.closest("[data-fly]");if(b){flyTo(+b.dataset.fly);return;}const a=e.target.closest("[data-addidea]");if(a&&window.__addIdea){await window.__addIdea(PLACES[+a.dataset.addidea]);setTimeout(render,400);}});
 G("legend").innerHTML=CATS.map(c=>`<span><i style="background:${catColor(c)}"></i>${esc(c)}</span>`).join("");
 
 /* map */
@@ -1033,6 +1201,7 @@ function initMap(){
   try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",retheme);}catch(e){}
   new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 }
+window.__mapRefresh=()=>{if(inited)render();};
 window.__mapShow=()=>{
   if(!inited){inited=true;if(window.L){initMap();}else{render();}return;}
   if(map)setTimeout(()=>map.invalidateSize(),60);
