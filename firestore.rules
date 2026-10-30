@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only the trip's own subtree, found by its secret path; nothing else is readable or writable.
+    match /trips/{trip}/{document=**} {
+      allow read: if trip == "cGl2p9kEOPclhXLuosuXEFb5";
+      allow write: if trip == "cGl2p9kEOPclhXLuosuXEFb5" && (request.resource == null || request.resource.data.keys().size() <= 20);
+    }
+  }
+}
